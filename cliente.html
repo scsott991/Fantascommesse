@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>FantaScommesse — Cliente</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ===== QUIGIOCO THEME ===== */
+:root {
+  --navy: #1B2A4A;
+  --navy-dark: #111D35;
+  --navy-deep: #0B1528;
+  --navy-light: #243558;
+  --red: #E42528;
+  --red-dark: #B91C1F;
+  --red-glow: rgba(228,37,40,0.15);
+  --white: #FFFFFF;
+  --gray-200: #D5DAE3;
+  --gray-400: #8892A8;
+  --gray-600: #4A5568;
+  --gold: #F5A623;
+  --green: #22C55E;
+  --green-bg: rgba(34,197,94,0.1);
+  --red-bg: rgba(228,37,40,0.1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(180deg, var(--navy-deep) 0%, var(--navy-dark) 100%);
+  color: var(--white);
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 70px;
+}
+.page { padding: 16px 20px 20px; display: none; }
+.page.active { display: block; }
+
+/* Toast */
+#toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 600;
+  z-index: 9999; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.toast-ok { background: #14532d; color: #86efac; }
+.toast-err { background: #7f1d1d; color: #fca5a5; }
+
+/* Logo */
+.logo { width: 72px; height: 72px; border-radius: 18px; background: linear-gradient(135deg, var(--red), var(--red-dark));
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 32px rgba(228,37,40,0.3); margin: 0 auto; }
+.logo span { font-size: 30px; font-weight: 900; color: var(--white); letter-spacing: -2px; }
+
+/* Buttons */
+.btn1 { width: 100%; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--red), var(--red-dark));
+  color: var(--white); font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px; }
+.btn-outline { width: 100%; padding: 12px; border: 1px dashed var(--navy-light); border-radius: 12px;
+  background: transparent; color: var(--gray-400); font-size: 14px; cursor: pointer; text-align: center; }
+.back-btn { background: none; border: none; color: var(--red); font-size: 15px; font-weight: 600; cursor: pointer; padding: 8px 0 16px; }
+.logout-btn { background: none; border: 1px solid var(--navy-light); border-radius: 8px; color: var(--gray-400);
+  font-size: 13px; padding: 6px 14px; cursor: pointer; }
+
+/* Form */
+.lbl { display: block; font-size: 12px; font-weight: 600; color: var(--gray-400); margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: 0.5px; }
+.inp, .sel { width: 100%; padding: 12px 14px; background: var(--navy-dark); border: 1px solid var(--navy-light);
+  border-radius: 10px; color: var(--white); font-size: 16px; outline: none; -webkit-appearance: none; }
+.inp::placeholder { color: var(--gray-600); }
+
+/* Header */
+.hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-top: 8px; }
+.hdr-name { font-size: 22px; font-weight: 700; }
+.hdr-sub { font-size: 13px; color: var(--gray-400); }
+.h2 { font-size: 22px; font-weight: 700; margin-bottom: 16px; }
+.hint { font-size: 13px; color: var(--gray-400); margin-bottom: 12px; }
+.empty { font-size: 14px; color: var(--gray-600); text-align: center; padding: 32px 0; }
+
+/* Matchday card */
+.md-card { border-radius: 16px; padding: 18px 20px; margin-bottom: 20px; text-align: center; }
+.md-open { background: linear-gradient(135deg, var(--navy-dark), var(--navy)); border: 1px solid rgba(34,197,94,0.2); }
+.md-locked { background: var(--navy-dark); border: 1px solid rgba(245,166,35,0.2); }
+.md-off { background: var(--navy-dark); border: 1px solid var(--navy-light); color: var(--gray-400); font-size: 14px; }
+
+/* Badges */
+.badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.5px; }
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-gold { background: rgba(245,166,35,0.12); color: var(--gold); }
+.badge-red { background: var(--red-glow); color: var(--red); }
+
+/* Tabs */
+.tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.tab { flex: 1; padding: 10px; border: 1px solid var(--navy-light); border-radius: 10px; background: var(--navy-dark);
+  color: var(--gray-400); font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
+.tab.on { border-color: var(--red); background: var(--red-glow); color: var(--red); }
+
+/* Quote input */
+.q-inp { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.q-inp-i { width: 28px; height: 28px; border-radius: 8px; background: var(--navy-dark); display: flex; align-items: center;
+  justify-content: center; font-size: 12px; font-weight: 700; color: var(--gray-400); border: 1px solid var(--navy-light); flex-shrink: 0; }
+.q-inp-f { flex: 1; padding: 10px 12px; background: var(--navy-dark); border: 1px solid var(--navy-light);
+  border-radius: 10px; color: var(--white); font-size: 16px; outline: none; }
+
+/* Quote result rows */
+.q-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; margin-bottom: 6px; border: 1px solid var(--navy-light); }
+.q-row.win { background: var(--green-bg); border-color: var(--green); }
+.q-row.lose { background: var(--red-bg); border-color: var(--red); }
+.q-idx { width: 24px; font-size: 12px; font-weight: 700; color: var(--gray-400); text-align: center; }
+.q-val { flex: 1; font-size: 16px; font-weight: 600; }
+.void-tag { display: inline-block; margin-left: 8px; font-size: 9px; font-weight: 700; color: var(--gold);
+  background: rgba(245,166,35,0.15); padding: 2px 6px; border-radius: 4px; vertical-align: middle; }
+.q-res { font-size: 18px; font-weight: 700; }
+.q-res.w { color: var(--green); }
+.q-res.l { color: var(--red); }
+.q-res.p { color: var(--gray-400); }
+
+/* Score */
+.score-card { background: var(--red-glow); border-radius: 14px; padding: 16px 20px; text-align: center;
+  margin-top: 16px; border: 1px solid rgba(228,37,40,0.2); }
+.score-num { font-size: 28px; font-weight: 800; color: var(--red); }
+.score-sub { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+
+/* List rows */
+.row { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px;
+  background: var(--navy-dark); border: 1px solid var(--navy-light); border-radius: 12px; margin-bottom: 8px;
+  cursor: pointer; color: var(--white); font-size: 15px; text-align: left; }
+
+/* Standings */
+.st-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--navy-dark);
+  border: 1px solid var(--navy-light); border-radius: 12px; margin-bottom: 8px; }
+.st-row.first { border-color: rgba(245,166,35,0.35); }
+.pos-c { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; flex-shrink: 0; }
+.st-pts { font-size: 18px; font-weight: 800; color: var(--red); }
+
+/* Prize */
+.box { background: var(--navy-dark); border-radius: 16px; padding: 16px 20px; border: 1px solid var(--navy-light); margin-top: 16px; }
+.brk { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--navy-deep); font-size: 14px; color: var(--gray-200); }
+.pr-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--navy-deep); }
+.prize-big { font-size: 42px; font-weight: 800; color: var(--red); text-align: center; margin: 24px 0; }
+
+/* Attach */
+.img-full { width: 100%; max-height: 300px; object-fit: contain; border-radius: 12px; margin: 12px 0; }
+.att-box { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px;
+  background: var(--navy-dark); border-radius: 12px; margin: 12px 0; border: 1px solid var(--navy-light); font-size: 14px; }
+.att-box a { color: var(--red); font-weight: 600; text-decoration: none; }
+.lnk-box { display: block; padding: 12px; background: var(--red-glow); border-radius: 12px; margin: 12px 0;
+  border: 1px solid rgba(228,37,40,0.2); color: var(--red); font-weight: 600; font-size: 14px; text-decoration: none; text-align: center; }
+
+/* Login */
+.login-wrap { text-align: center; padding: 60px 24px 40px; }
+.login-title { font-size: 28px; font-weight: 800; margin: 20px 0 4px; }
+.login-sub { font-size: 14px; color: var(--gray-400); margin-bottom: 28px; }
+.login-form { max-width: 300px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+
+/* Section title */
+.sec-t { font-size: 11px; font-weight: 700; color: var(--gray-400); letter-spacing: 1px; margin: 20px 0 10px; }
+
+/* Nav */
+.nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px;
+  display: flex; background: var(--navy-deep); border-top: 1px solid var(--navy-light); z-index: 100; }
+.nav-btn { flex: 1; padding: 8px 0 6px; background: none; border: none; color: var(--gray-400);
+  cursor: pointer; text-align: center; font-size: 10px; }
+.nav-btn.act { color: var(--red); }
+.nav-ico { font-size: 22px; }
+.nav-lbl { font-size: 10px; font-weight: 600; margin-top: 2px; }
+
+/* Loading */
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+.loading-text { color: var(--gray-400); margin-top: 16px; font-size: 14px; }
+
+.img-prev { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-top: 12px; }
+.green-check { color: var(--green); font-weight: 600; margin: 8px 0 0; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- LOADING -->
+<div id="pg-loading" class="loading">
+  <div class="logo"><span>FS</span></div>
+  <div class="loading-text">Caricamento...</div>
+</div>
+
+<!-- LOGIN -->
+<div id="pg-login" class="page">
+  <div class="login-wrap">
+    <div class="logo"><span>FS</span></div>
+    <h1 class="login-title">FantaScommesse</h1>
+    <p class="login-sub">Area Cliente</p>
+    <div class="login-form">
+      <select id="login-sel" class="sel"><option value="">Seleziona giocatore</option></select>
+      <input id="login-pin" class="inp" type="password" inputmode="numeric" placeholder="PIN">
+      <button class="btn1" onclick="doLogin()">ACCEDI</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="pg-home" class="page">
+  <div class="hdr">
+    <div><div class="hdr-name" id="home-name"></div><div class="hdr-sub">FantaScommesse</div></div>
+    <button class="logout-btn" onclick="doLogout()">Esci</button>
+  </div>
+  <div id="home-md"></div>
+  <div class="sec-t">ULTIME GIORNATE</div>
+  <div id="home-history"></div>
+</div>
+
+<!-- SCHEDINA: FORM -->
+<div id="pg-bet-form" class="page">
+  <button class="back-btn" onclick="goTab('home')">← Indietro</button>
+  <h2 class="h2">Carica Schedina</h2>
+  <p class="hint" id="bet-hint"></p>
+  <div class="lbl">ALLEGA RICEVUTA</div>
+  <div class="tabs">
+    <button class="tab on" id="tab-photo" onclick="setAttTab('photo')">📸 Foto</button>
+    <button class="tab" id="tab-pdf" onclick="setAttTab('pdf')">📄 PDF</button>
+    <button class="tab" id="tab-link" onclick="setAttTab('link')">🔗 Link</button>
+  </div>
+  <div id="att-photo">
+    <input type="file" accept="image/*" id="file-photo" onchange="onFilePhoto()" style="display:none">
+    <button class="btn-outline" id="btn-photo" onclick="document.getElementById('file-photo').click()">SCATTA / CARICA FOTO</button>
+    <img id="photo-prev" class="img-prev" style="display:none">
+  </div>
+  <div id="att-pdf" style="display:none">
+    <input type="file" accept="application/pdf" id="file-pdf" onchange="onFilePdf()" style="display:none">
+    <button class="btn-outline" id="btn-pdf" onclick="document.getElementById('file-pdf').click()">CARICA PDF</button>
+  </div>
+  <div id="att-link" style="display:none">
+    <input class="inp" type="url" id="inp-link" placeholder="https://www.quigioco.it/...">
+  </div>
+  <div style="margin-top:20px">
+    <div class="lbl">QUOTE (1-10)</div>
+    <div id="quotes-inputs"></div>
+  </div>
+  <button class="btn1" style="margin-top:24px" onclick="submitBet()">INVIA SCHEDINA</button>
+</div>
+
+<!-- SCHEDINE: LISTA GIORNATE -->
+<div id="pg-bets-list" class="page">
+  <h2 class="h2">Schedine</h2>
+  <div id="bets-list"></div>
+</div>
+
+<!-- SCHEDINE: GIOCATORI DI UNA GIORNATA -->
+<div id="pg-bets-md" class="page">
+  <button class="back-btn" onclick="showPage('pg-bets-list')">← Indietro</button>
+  <h2 class="h2" id="bets-md-title"></h2>
+  <div id="bets-md-list"></div>
+</div>
+
+<!-- SCHEDINA: DETTAGLIO -->
+<div id="pg-bet-detail" class="page">
+  <button class="back-btn" onclick="showPage('pg-bets-md')">← Indietro</button>
+  <h2 class="h2" id="bet-det-name"></h2>
+  <div id="bet-det-badge"></div>
+  <div id="bet-det-attach"></div>
+  <div id="bet-det-quotes"></div>
+  <div id="bet-det-score"></div>
+</div>
+
+<!-- CLASSIFICA -->
+<div id="pg-classifica" class="page">
+  <h2 class="h2">Classifica Generale</h2>
+  <div id="classifica-list"></div>
+  <div id="classifica-dist"></div>
+</div>
+
+<!-- MONTEPREMI -->
+<div id="pg-premio" class="page">
+  <h2 class="h2">Montepremi</h2>
+  <div class="prize-big" id="premio-total"></div>
+  <div id="premio-breakdown"></div>
+</div>
+
+<!-- NAV -->
+<div class="nav" id="main-nav" style="display:none">
+  <button class="nav-btn act" id="nav-home" onclick="goTab('home')"><div class="nav-ico">🏠</div><div class="nav-lbl">Home</div></button>
+  <button class="nav-btn" id="nav-schedina" onclick="goTab('schedina')"><div class="nav-ico">📋</div><div class="nav-lbl">Schedine</div></button>
+  <button class="nav-btn" id="nav-classifica" onclick="goTab('classifica')"><div class="nav-ico">🏆</div><div class="nav-lbl">Classifica</div></button>
+  <button class="nav-btn" id="nav-premio" onclick="goTab('premio')"><div class="nav-ico">💰</div><div class="nav-lbl">Montepremi</div></button>
+</div>
+
+<script>
+// =============================================
+// CONFIG — INSERISCI I TUOI DATI SUPABASE
+// =============================================
+var SUPABASE_URL = 'https://TUO-PROGETTO.supabase.co';
+var SUPABASE_KEY = 'TUA-ANON-KEY';
+// =============================================
+
+var VOID_TH = 1.15;
+var MAX_BETS = 10;
+var BONUS_MAP = { 7: 1, 8: 2, 9: 3, 10: 5 };
+var PRIZE_D = [0.43, 0.26, 0.15, 0.10, 0.06];
+var PENALTY_PTS = -2;
+
+var sb = null;
+var currentUser = null;
+var currentTab = 'home';
+var attType = 'photo';
+var photoFile = null;
+var pdfFile = null;
+var viewingMdId = null;
+
+// ===== INIT =====
+function init() {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  buildQuoteInputs();
+  loadLogin();
+}
+
+function buildQuoteInputs() {
+  var html = '';
+  for (var i = 0; i < MAX_BETS; i++) {
+    html += '<div class="q-inp"><span class="q-inp-i">' + (i + 1) + '</span>';
+    html += '<input class="q-inp-f" type="text" inputmode="decimal" placeholder="Quota" id="q-' + i + '"></div>';
+  }
+  document.getElementById('quotes-inputs').innerHTML = html;
+}
+
+// ===== TOAST =====
+function flash(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = type === 'error' ? 'toast-err' : type === 'success' ? 'toast-ok' : '';
+  el.style.display = 'block';
+  setTimeout(function() { el.style.display = 'none'; }, 2200);
+}
+
+// ===== NAVIGATION =====
+function showPage(id) {
+  var pages = document.querySelectorAll('.page');
+  for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+function setNav(tab) {
+  currentTab = tab;
+  var btns = ['nav-home', 'nav-schedina', 'nav-classifica', 'nav-premio'];
+  var tabs = ['home', 'schedina', 'classifica', 'premio'];
+  for (var i = 0; i < btns.length; i++) {
+    var el = document.getElementById(btns[i]);
+    if (el) el.className = tabs[i] === tab ? 'nav-btn act' : 'nav-btn';
+  }
+}
+
+function goTab(tab) {
+  setNav(tab);
+  if (tab === 'home') { loadHome(); showPage('pg-home'); }
+  else if (tab === 'schedina') { checkAndShowSchedina(); }
+  else if (tab === 'classifica') { loadClassifica(); showPage('pg-classifica'); }
+  else if (tab === 'premio') { loadPremio(); showPage('pg-premio'); }
+}
+
+// ===== LOGIN =====
+async function loadLogin() {
+  try {
+    var res = await sb.from('participants').select('*').order('name');
+    var sel = document.getElementById('login-sel');
+    sel.innerHTML = '<option value="">Seleziona giocatore</option>';
+    if (res.data) {
+      res.data.forEach(function(p) {
+        sel.innerHTML += '<option value="' + p.id + '">' + p.name + '</option>';
+      });
+    }
+    document.getElementById('pg-loading').style.display = 'none';
+    showPage('pg-login');
+  } catch(e) {
+    flash('Errore connessione', 'error');
+    document.getElementById('pg-loading').style.display = 'none';
+    showPage('pg-login');
+  }
+}
+
+async function doLogin() {
+  var selId = document.getElementById('login-sel').value;
+  var pin = document.getElementById('login-pin').value;
+  if (!selId || !pin) return flash('Seleziona giocatore e PIN', 'error');
+
+  var res = await sb.from('participants').select('*').eq('id', selId).eq('pin', pin).single();
+  if (res.error || !res.data) return flash('PIN errato', 'error');
+
+  currentUser = res.data;
+  document.getElementById('login-pin').value = '';
+  document.getElementById('main-nav').style.display = 'flex';
+  goTab('home');
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('main-nav').style.display = 'none';
+  loadLogin();
+}
+
+// ===== DATA HELPERS =====
+async function getCurrentMd() {
+  var cfg = await sb.from('config').select('value').eq('key', 'current_matchday').single();
+  if (!cfg.data || !cfg.data.value || cfg.data.value === 'null') return null;
+  var md = await sb.from('matchdays').select('*').eq('id', cfg.data.value).single();
+  return md.data || null;
+}
+
+async function getParticipants() {
+  var res = await sb.from('participants').select('*').order('name');
+  return res.data || [];
+}
+
+async function getBets(mdId) {
+  var res = await sb.from('bets').select('*').eq('matchday_id', mdId);
+  return res.data || [];
+}
+
+async function getPrizePool() {
+  var res = await sb.from('prize_pool').select('*').eq('id', 1).single();
+  return res.data || { base: 0, matchday: 0, penalties: 0, winnings: 0 };
+}
+
+function totalPrize(pp) {
+  return (pp.base || 0) + (pp.matchday || 0) + (pp.penalties || 0) + (pp.winnings || 0);
+}
+
+async function getNameById(id) {
+  var res = await sb.from('participants').select('name').eq('id', id).single();
+  return res.data ? res.data.name : '?';
+}
+
+// ===== HOME =====
+async function loadHome() {
+  document.getElementById('home-name').textContent = 'Ciao, ' + currentUser.name;
+  var md = await getCurrentMd();
+  var mdHtml = '';
+  if (md && md.status === 'open') {
+    var bets = await getBets(md.id);
+    var hasBet = bets.some(function(b) { return b.participant_id === currentUser.id; });
+    mdHtml = '<div class="md-card md-open"><div class="badge badge-green">GIORNATA ' + md.number + ' — APERTA</div>';
+    if (hasBet) mdHtml += '<p class="green-check">✓ Schedina caricata</p>';
+    else mdHtml += '<button class="btn1" style="margin-top:12px" onclick="goTab(\'schedina\')">CARICA SCHEDINA</button>';
+    mdHtml += '</div>';
+  } else if (md && md.status === 'locked') {
+    mdHtml = '<div class="md-card md-locked"><div class="badge badge-gold">GIORNATA ' + md.number + ' — CHIUSA</div>';
+    mdHtml += '<p style="color:var(--gray-400);font-size:13px;margin-top:6px">In attesa dei risultati</p></div>';
+  } else {
+    mdHtml = '<div class="md-card md-off">Nessuna giornata attiva</div>';
+  }
+  document.getElementById('home-md').innerHTML = mdHtml;
+
+  // History
+  var mds = await sb.from('matchdays').select('*').order('number', { ascending: false }).limit(3);
+  var hHtml = '';
+  if (mds.data && mds.data.length > 0) {
+    for (var i = 0; i < mds.data.length; i++) {
+      var m = mds.data[i];
+      var bts = await getBets(m.id);
+      var best = null; var bs = -1;
+      bts.forEach(function(b) { if (b.score !== null && b.score > bs) { bs = b.score; best = b.participant_id; } });
+      var info = m.status === 'scored' && best ? (await getNameById(best)) + ' ' + bs + 'pt' : m.status === 'open' ? 'Aperta' : 'Chiusa';
+      hHtml += '<div class="row" style="cursor:default"><span style="font-weight:600">G' + m.number + '</span><span style="font-size:12px;color:var(--gray-400)">' + info + '</span></div>';
+    }
+  } else { hHtml = '<p class="empty">Nessuna giornata</p>'; }
+  document.getElementById('home-history').innerHTML = hHtml;
+}
+
+// ===== SCHEDINA =====
+async function checkAndShowSchedina() {
+  var md = await getCurrentMd();
+  if (md && md.status === 'open') {
+    var bets = await getBets(md.id);
+    var hasBet = bets.some(function(b) { return b.participant_id === currentUser.id; });
+    if (!hasBet) {
+      document.getElementById('bet-hint').textContent = 'Giornata ' + md.number + ' — 10 quote';
+      resetBetForm();
+      showPage('pg-bet-form');
+      return;
+    }
+  }
+  loadBetsList();
+  showPage('pg-bets-list');
+}
+
+function resetBetForm() {
+  for (var i = 0; i < MAX_BETS; i++) {
+    var el = document.getElementById('q-' + i);
+    if (el) el.value = '';
+  }
+  photoFile = null; pdfFile = null;
+  document.getElementById('inp-link').value = '';
+  document.getElementById('photo-prev').style.display = 'none';
+  document.getElementById('btn-photo').textContent = 'SCATTA / CARICA FOTO';
+  document.getElementById('btn-pdf').textContent = 'CARICA PDF';
+  setAttTab('photo');
+}
+
+function setAttTab(type) {
+  attType = type;
+  document.getElementById('tab-photo').className = type === 'photo' ? 'tab on' : 'tab';
+  document.getElementById('tab-pdf').className = type === 'pdf' ? 'tab on' : 'tab';
+  document.getElementById('tab-link').className = type === 'link' ? 'tab on' : 'tab';
+  document.getElementById('att-photo').style.display = type === 'photo' ? 'block' : 'none';
+  document.getElementById('att-pdf').style.display = type === 'pdf' ? 'block' : 'none';
+  document.getElementById('att-link').style.display = type === 'link' ? 'block' : 'none';
+}
+
+function onFilePhoto() {
+  var f = document.getElementById('file-photo').files[0];
+  if (!f) return;
+  photoFile = f;
+  document.getElementById('btn-photo').textContent = '✓ FOTO CARICATA';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = document.getElementById('photo-prev');
+    img.src = e.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(f);
+}
+
+function onFilePdf() {
+  var f = document.getElementById('file-pdf').files[0];
+  if (!f) return;
+  pdfFile = f;
+  document.getElementById('btn-pdf').textContent = '✓ ' + f.name;
+}
+
+async function submitBet() {
+  var md = await getCurrentMd();
+  if (!md) return flash('Nessuna giornata aperta', 'error');
+  if (md.status !== 'open') return flash('Giornata chiusa', 'error');
+
+  var bets = await getBets(md.id);
+  if (bets.some(function(b) { return b.participant_id === currentUser.id; })) return flash('Già caricata', 'error');
+
+  var quotes = [];
+  var ok = true;
+  for (var i = 0; i < MAX_BETS; i++) {
+    var val = parseFloat(document.getElementById('q-' + i).value.replace(',', '.'));
+    if (isNaN(val) || val <= 0) { ok = false; break; }
+    quotes.push(val);
+  }
+  if (!ok || quotes.length !== MAX_BETS) return flash('Inserisci 10 quote valide', 'error');
+
+  // Upload allegato
+  var attUrl = null;
+  var attTypeVal = null;
+
+  if (attType === 'photo' && photoFile) {
+    attTypeVal = 'photo';
+    var path = 'g' + md.number + '/' + currentUser.id + '_' + Date.now() + '.jpg';
+    var up = await sb.storage.from('ricevute').upload(path, photoFile);
+    if (!up.error) {
+      var pub = sb.storage.from('ricevute').getPublicUrl(path);
+      attUrl = pub.data.publicUrl;
+    }
+  } else if (attType === 'pdf' && pdfFile) {
+    attTypeVal = 'pdf';
+    var path2 = 'g' + md.number + '/' + currentUser.id + '_' + Date.now() + '.pdf';
+    var up2 = await sb.storage.from('ricevute').upload(path2, pdfFile);
+    if (!up2.error) {
+      var pub2 = sb.storage.from('ricevute').getPublicUrl(path2);
+      attUrl = pub2.data.publicUrl;
+    }
+  } else if (attType === 'link') {
+    var lnk = document.getElementById('inp-link').value.trim();
+    if (lnk) { attTypeVal = 'link'; attUrl = lnk; }
+  }
+
+  var res = await sb.from('bets').insert({
+    matchday_id: md.id,
+    participant_id: currentUser.id,
+    quotes: quotes,
+    attachment_type: attTypeVal,
+    attachment_url: attUrl
+  });
+
+  if (res.error) return flash('Errore: ' + res.error.message, 'error');
+  flash('Schedina caricata!', 'success');
+  goTab('home');
+}
+
+// ===== BETS LIST =====
+async function loadBetsList() {
+  var mds = await sb.from('matchdays').select('*').order('number', { ascending: false });
+  var html = '';
+  if (mds.data && mds.data.length > 0) {
+    for (var i = 0; i < mds.data.length; i++) {
+      var m = mds.data[i];
+      var bts = await getBets(m.id);
+      var st = m.status === 'open' ? 'Aperta' : m.status === 'locked' ? 'Chiusa' : 'Calcolata';
+      var sc = m.status === 'open' ? 'var(--green)' : m.status === 'locked' ? 'var(--gold)' : 'var(--gray-400)';
+      html += '<div class="row" onclick="loadBetsMd(\'' + m.id + '\',' + m.number + ')">';
+      html += '<span style="font-weight:600">Giornata ' + m.number + '</span>';
+      html += '<span style="font-size:12px;font-weight:600;color:' + sc + '">' + st + ' · ' + bts.length + '</span></div>';
+    }
+  } else { html = '<p class="empty">Nessuna giornata</p>'; }
+  document.getElementById('bets-list').innerHTML = html;
+}
+
+async function loadBetsMd(mdId, mdNum) {
+  viewingMdId = mdId;
+  document.getElementById('bets-md-title').textContent = 'Giornata ' + mdNum;
+  var bets = await getBets(mdId);
+  var html = '';
+  if (bets.length === 0) { html = '<p class="empty">Nessuna schedina</p>'; }
+  else {
+    for (var i = 0; i < bets.length; i++) {
+      var b = bets[i];
+      var name = await getNameById(b.participant_id);
+      var ver = b.verified ? '<span style="color:var(--green)"> ✓</span>' : '';
+      var sc = b.score !== null ? '<span style="color:var(--red)">' + b.score + ' pt</span>' : '<span style="color:var(--gray-400)">—</span>';
+      html += '<div class="row" onclick="loadBetDetail(\'' + b.id + '\')">';
+      html += '<span style="font-weight:600">' + name + ver + '</span>' + sc + '</div>';
+    }
+  }
+  document.getElementById('bets-md-list').innerHTML = html;
+  showPage('pg-bets-md');
+}
+
+async function loadBetDetail(betId) {
+  var res = await sb.from('bets').select('*').eq('id', betId).single();
+  if (!res.data) return;
+  var b = res.data;
+  var name = await getNameById(b.participant_id);
+  var md = await sb.from('matchdays').select('number').eq('id', b.matchday_id).single();
+
+  document.getElementById('bet-det-name').textContent = name;
+  document.getElementById('bet-det-badge').innerHTML = '<div class="badge badge-red">Giornata ' + (md.data ? md.data.number : '?') + '</div>';
+
+  // Attachment
+  var attHtml = '';
+  if (b.attachment_type === 'photo' && b.attachment_url) {
+    attHtml = '<img src="' + b.attachment_url + '" class="img-full">';
+  } else if (b.attachment_type === 'pdf' && b.attachment_url) {
+    attHtml = '<div class="att-box"><span>📄 Ricevuta PDF</span><a href="' + b.attachment_url + '" target="_blank">Apri</a></div>';
+  } else if (b.attachment_type === 'link' && b.attachment_url) {
+    attHtml = '<a href="' + b.attachment_url + '" target="_blank" class="lnk-box">🔗 Apri ricevuta</a>';
+  }
+  document.getElementById('bet-det-attach').innerHTML = attHtml;
+
+  // Quotes
+  var qHtml = '';
+  for (var i = 0; i < b.quotes.length; i++) {
+    var q = b.quotes[i];
+    var r = b.results[i];
+    var cls = r === 'win' ? ' win' : r === 'lose' ? ' lose' : '';
+    var rCls = r === 'win' ? 'q-res w' : r === 'lose' ? 'q-res l' : 'q-res p';
+    var rTxt = r === 'win' ? '✓' : r === 'lose' ? '✗' : '—';
+    var voidTag = parseFloat(q) < VOID_TH ? '<span class="void-tag">VOID</span>' : '';
+    qHtml += '<div class="q-row' + cls + '"><span class="q-idx">' + (i + 1) + '</span>';
+    qHtml += '<span class="q-val">' + q + voidTag + '</span>';
+    qHtml += '<span class="' + rCls + '">' + rTxt + '</span></div>';
+  }
+  document.getElementById('bet-det-quotes').innerHTML = qHtml;
+
+  // Score
+  var sHtml = '';
+  if (b.score !== null) {
+    sHtml = '<div class="score-card"><div class="score-num">' + b.score + ' pt</div>';
+    sHtml += '<div class="score-sub">Corretti: ' + b.correct + '/' + MAX_BETS + ' | Bonus: +' + b.bonus + '</div></div>';
+  }
+  document.getElementById('bet-det-score').innerHTML = sHtml;
+  showPage('pg-bet-detail');
+}
+
+// ===== CLASSIFICA =====
+async function loadClassifica() {
+  var parts = await getParticipants();
+  var mds = await sb.from('matchdays').select('*').eq('status', 'scored');
+  var scores = {};
+  parts.forEach(function(p) { scores[p.id] = { id: p.id, name: p.name, total: 0, played: 0, pens: 0 }; });
+
+  if (mds.data) {
+    for (var i = 0; i < mds.data.length; i++) {
+      var md = mds.data[i];
+      var bets = await getBets(md.id);
+      var sub = {};
+      bets.forEach(function(b) { sub[b.participant_id] = true; });
+
+      bets.forEach(function(b) {
+        if (scores[b.participant_id] && b.score !== null) {
+          scores[b.participant_id].total += b.score;
+          scores[b.participant_id].played += 1;
+        }
+      });
+
+      (md.active_participants || []).forEach(function(pid) {
+        if (!sub[pid] && scores[pid]) {
+          scores[pid].total += PENALTY_PTS;
+          scores[pid].pens += 1;
+        }
+      });
+    }
+  }
+
+  var arr = Object.values(scores);
+  arr.sort(function(a, b) { return b.total - a.total; });
+
+  var posCol = ['#F5A623', '#A0AEC0', '#CD7F32'];
+  var html = '';
+  arr.forEach(function(s, i) {
+    var top3 = i < 3;
+    var bg = top3 ? posCol[i] : 'var(--navy-light)';
+    var col = top3 ? '#000' : 'var(--gray-400)';
+    var firstCls = i === 0 ? ' first' : '';
+    html += '<div class="st-row' + firstCls + '">';
+    html += '<div class="pos-c" style="background:' + bg + ';color:' + col + '">' + (i + 1) + '</div>';
+    html += '<div style="flex:1"><div style="font-size:15px;font-weight:600">' + s.name + '</div>';
+    html += '<div style="font-size:11px;color:var(--gray-400)">' + s.played + ' g.' + (s.pens > 0 ? ' · ' + s.pens + ' pen.' : '') + '</div></div>';
+    html += '<div class="st-pts">' + s.total.toFixed(2) + '</div></div>';
+  });
+  if (arr.length === 0) html = '<p class="empty">Nessun dato</p>';
+  document.getElementById('classifica-list').innerHTML = html;
+
+  // Distribution
+  var pp = await getPrizePool();
+  var tp = totalPrize(pp);
+  var dHtml = '<div class="box"><div style="font-size:11px;font-weight:700;color:var(--gray-400);letter-spacing:1px;margin-bottom:10px">DISTRIBUZIONE PREMI</div>';
+  dHtml += '<div style="font-size:16px;font-weight:700;color:var(--red);margin-bottom:12px">Montepremi: ' + tp.toFixed(2) + ' €</div>';
+  PRIZE_D.forEach(function(pct, i) {
+    dHtml += '<div class="pr-row"><span style="font-weight:700;color:var(--gold);width:30px">' + (i + 1) + '°</span>';
+    dHtml += '<span style="color:var(--gray-400);width:50px">' + (pct * 100).toFixed(0) + '%</span>';
+    dHtml += '<span style="font-weight:600">' + (tp * pct).toFixed(2) + ' €</span></div>';
+  });
+  dHtml += '</div>';
+  document.getElementById('classifica-dist').innerHTML = dHtml;
+}
+
+// ===== MONTEPREMI =====
+async function loadPremio() {
+  var pp = await getPrizePool();
+  var tp = totalPrize(pp);
+  document.getElementById('premio-total').textContent = tp.toFixed(2) + ' €';
+  var html = '<div class="box">';
+  html += '<div class="brk"><span>Iscrizioni</span><span>' + (pp.base || 0).toFixed(2) + ' €</span></div>';
+  html += '<div class="brk"><span>Giornate</span><span>' + (pp.matchday || 0).toFixed(2) + ' €</span></div>';
+  html += '<div class="brk"><span>Penalità</span><span>' + (pp.penalties || 0).toFixed(2) + ' €</span></div>';
+  html += '<div class="brk"><span>20% vincite</span><span>' + (pp.winnings || 0).toFixed(2) + ' €</span></div>';
+  html += '</div>';
+  document.getElementById('premio-breakdown').innerHTML = html;
+}
+
+// ===== START =====
+window.onload = init;
+</script>
+</body>
+</html>

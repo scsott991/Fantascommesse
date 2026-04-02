@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>FantaScommesse — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --navy:#1B2A4A;--navy-dark:#111D35;--navy-deep:#0B1528;--navy-light:#243558;
+  --red:#E42528;--red-dark:#B91C1F;--red-glow:rgba(228,37,40,0.15);
+  --white:#FFFFFF;--gray-200:#D5DAE3;--gray-400:#8892A8;--gray-600:#4A5568;
+  --gold:#F5A623;--green:#22C55E;--green-bg:rgba(34,197,94,0.1);--red-bg:rgba(228,37,40,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(180deg,var(--navy-deep),var(--navy-dark));
+  color:var(--white);min-height:100vh;max-width:480px;margin:0 auto;-webkit-font-smoothing:antialiased;padding-bottom:70px}
+.page{padding:16px 20px 20px;display:none}.page.active{display:block}
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;display:none;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+.toast-ok{background:#14532d;color:#86efac}.toast-err{background:#7f1d1d;color:#fca5a5}
+.logo{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,var(--red),var(--red-dark));display:flex;align-items:center;justify-content:center;box-shadow:0 8px 32px rgba(228,37,40,0.3);margin:0 auto}
+.logo span{font-size:30px;font-weight:900;color:var(--white);letter-spacing:-2px}
+.btn1{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--red),var(--red-dark));color:var(--white);font-size:15px;font-weight:700;cursor:pointer}
+.btn-sm{padding:10px 16px;border:none;border-radius:10px;background:var(--red);color:var(--white);font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0}
+.btn-sm.green{background:var(--green)}
+.btn-sm.gray{background:var(--navy-light)}
+.back-btn{background:none;border:none;color:var(--red);font-size:15px;font-weight:600;cursor:pointer;padding:8px 0 16px}
+.logout-btn{background:none;border:1px solid var(--navy-light);border-radius:8px;color:var(--gray-400);font-size:13px;padding:6px 14px;cursor:pointer}
+.lbl{display:block;font-size:12px;font-weight:600;color:var(--gray-400);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.inp{width:100%;padding:12px 14px;background:var(--navy-dark);border:1px solid var(--navy-light);border-radius:10px;color:var(--white);font-size:16px;outline:none}
+.inp::placeholder{color:var(--gray-600)}
+.inline-f{display:flex;gap:8px;align-items:center}
+.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-top:8px}
+.hdr-name{font-size:22px;font-weight:700}.hdr-sub{font-size:13px;color:var(--gray-400)}
+.h2{font-size:22px;font-weight:700;margin-bottom:16px}
+.hint{font-size:13px;color:var(--gray-400);margin-bottom:12px}
+.empty{font-size:14px;color:var(--gray-600);text-align:center;padding:32px 0}
+.md-card{border-radius:16px;padding:18px 20px;margin-bottom:20px;text-align:center}
+.md-open{background:linear-gradient(135deg,var(--navy-dark),var(--navy));border:1px solid rgba(34,197,94,0.2)}
+.md-locked{background:var(--navy-dark);border:1px solid rgba(245,166,35,0.2)}
+.md-off{background:var(--navy-dark);border:1px solid var(--navy-light);color:var(--gray-400);font-size:14px}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:0.5px}
+.badge-green{background:var(--green-bg);color:var(--green)}.badge-gold{background:rgba(245,166,35,0.12);color:var(--gold)}.badge-red{background:var(--red-glow);color:var(--red)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
+.card{background:var(--navy-dark);border:1px solid var(--navy-light);border-radius:16px;padding:20px 16px;text-align:center;cursor:pointer;color:var(--white)}
+.card.accent{border-color:rgba(228,37,40,0.25);background:linear-gradient(135deg,var(--navy-dark),#1a1020)}
+.card-ico{font-size:28px;margin-bottom:8px}.card-lbl{font-size:13px;font-weight:600;color:var(--gray-400)}
+.row{width:100%;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--navy-dark);border:1px solid var(--navy-light);border-radius:12px;margin-bottom:8px;cursor:pointer;color:var(--white);font-size:15px;text-align:left}
+.q-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;margin-bottom:6px;border:1px solid var(--navy-light)}
+.q-row.win{background:var(--green-bg);border-color:var(--green)}.q-row.lose{background:var(--red-bg);border-color:var(--red)}
+.q-idx{width:24px;font-size:12px;font-weight:700;color:var(--gray-400);text-align:center}
+.q-val{flex:1;font-size:16px;font-weight:600}
+.void-tag{display:inline-block;margin-left:8px;font-size:9px;font-weight:700;color:var(--gold);background:rgba(245,166,35,0.15);padding:2px 6px;border-radius:4px;vertical-align:middle}
+.res-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--navy-light);background:var(--navy-dark);color:var(--gray-400);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.res-btn.w{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.res-btn.l{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.score-card{background:var(--red-glow);border-radius:14px;padding:16px 20px;text-align:center;margin-top:16px;border:1px solid rgba(228,37,40,0.2)}
+.score-num{font-size:28px;font-weight:800;color:var(--red)}.score-sub{font-size:12px;color:var(--gray-400);margin-top:4px}
+.st-row{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--navy-dark);border:1px solid var(--navy-light);border-radius:12px;margin-bottom:8px}
+.pos-c{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.box{background:var(--navy-dark);border-radius:16px;padding:16px 20px;border:1px solid var(--navy-light);margin-top:16px}
+.brk{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--navy-deep);font-size:14px;color:var(--gray-200)}
+.pr-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--navy-deep)}
+.pl-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--navy-dark);border:1px solid var(--navy-light);border-radius:12px;margin-bottom:8px}
+.del-btn{width:32px;height:32px;border-radius:8px;border:1px solid rgba(228,37,40,0.25);background:var(--red-bg);color:var(--red);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.sec-t{font-size:11px;font-weight:700;color:var(--gray-400);letter-spacing:1px;margin:20px 0 10px}
+.hist-r{display:flex;justify-content:space-between;padding:10px 14px;background:var(--navy-dark);border:1px solid var(--navy-light);border-radius:10px;margin-bottom:6px}
+.img-full{width:100%;max-height:300px;object-fit:contain;border-radius:12px;margin:12px 0}
+.att-box{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--navy-dark);border-radius:12px;margin:12px 0;border:1px solid var(--navy-light);font-size:14px}
+.att-box a{color:var(--red);font-weight:600;text-decoration:none}
+.lnk-box{display:block;padding:12px;background:var(--red-glow);border-radius:12px;margin:12px 0;border:1px solid rgba(228,37,40,0.2);color:var(--red);font-weight:600;font-size:14px;text-decoration:none;text-align:center}
+.login-wrap{text-align:center;padding:60px 24px 40px}.login-title{font-size:28px;font-weight:800;margin:20px 0 4px}.login-sub{font-size:14px;color:var(--gray-400);margin-bottom:28px}
+.login-form{max-width:300px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;background:var(--navy-deep);border-top:1px solid var(--navy-light);z-index:100}
+.nav-btn{flex:1;padding:8px 0 6px;background:none;border:none;color:var(--gray-400);cursor:pointer;text-align:center}
+.nav-btn.act{color:var(--red)}.nav-ico{font-size:22px}.nav-lbl{font-size:10px;font-weight:600;margin-top:2px}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh}
+.act-btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<div id="pg-loading" class="loading"><div class="logo"><span>FS</span></div><div style="color:var(--gray-400);margin-top:16px;font-size:14px">Caricamento...</div></div>
+
+<!-- LOGIN -->
+<div id="pg-login" class="page">
+  <div class="login-wrap">
+    <div class="logo"><span>FS</span></div>
+    <h1 class="login-title">FantaScommesse</h1>
+    <p class="login-sub">Area Admin</p>
+    <div class="login-form">
+      <input class="inp" type="password" inputmode="numeric" placeholder="PIN Admin" id="admin-pin">
+      <button class="btn1" onclick="doLogin()">ACCEDI</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="pg-dash" class="page">
+  <div class="hdr"><div><div class="hdr-name">Admin</div><div class="hdr-sub">FantaScommesse</div></div>
+    <button class="logout-btn" onclick="doLogout()">Esci</button></div>
+  <div id="dash-md"></div>
+  <div id="dash-grid"></div>
+  <div class="sec-t">ULTIME GIORNATE</div>
+  <div id="dash-hist"></div>
+</div>
+
+<!-- ESITI: LISTA -->
+<div id="pg-esiti" class="page">
+  <h2 class="h2">Segna Esiti</h2>
+  <div id="esiti-badge"></div>
+  <div id="esiti-list"></div>
+</div>
+
+<!-- ESITI: DETTAGLIO -->
+<div id="pg-esiti-det" class="page">
+  <button class="back-btn" onclick="loadEsiti()">← Indietro</button>
+  <h2 class="h2" id="esiti-det-name"></h2>
+  <div id="esiti-det-badge"></div>
+  <div id="esiti-det-actions"></div>
+  <div id="esiti-det-attach"></div>
+  <div id="esiti-det-quotes"></div>
+  <div id="esiti-det-score"></div>
+</div>
+
+<!-- GIOCATORI -->
+<div id="pg-players" class="page">
+  <h2 class="h2">Giocatori</h2>
+  <input class="inp" placeholder="Nome" id="new-name">
+  <input class="inp" style="margin-top:8px" placeholder="PIN (min 3)" type="password" inputmode="numeric" id="new-pin">
+  <button class="btn1" style="margin-top:12px" onclick="addPlayer()">AGGIUNGI</button>
+  <div style="margin-top:24px" id="players-list"></div>
+</div>
+
+<!-- MONTEPREMI -->
+<div id="pg-premio" class="page">
+  <h2 class="h2">Montepremi</h2>
+  <div id="premio-total" style="font-size:42px;font-weight:800;color:var(--red);text-align:center;margin:20px 0"></div>
+  <div id="premio-break"></div>
+  <div id="premio-admin"></div>
+  <div id="premio-dist"></div>
+  <div class="sec-t">CLASSIFICA</div>
+  <div id="premio-class"></div>
+</div>
+
+<!-- NAV -->
+<div class="nav" id="main-nav" style="display:none">
+  <button class="nav-btn act" id="nav-dash" onclick="goTab('dash')"><div class="nav-ico">📊</div><div class="nav-lbl">Dashboard</div></button>
+  <button class="nav-btn" id="nav-esiti" onclick="goTab('esiti')"><div class="nav-ico">✅</div><div class="nav-lbl">Esiti</div></button>
+  <button class="nav-btn" id="nav-players" onclick="goTab('players')"><div class="nav-ico">👥</div><div class="nav-lbl">Giocatori</div></button>
+  <button class="nav-btn" id="nav-premio" onclick="goTab('premio')"><div class="nav-ico">💰</div><div class="nav-lbl">Montepremi</div></button>
+</div>
+
+<script>
+// =============================================
+// CONFIG — INSERISCI I TUOI DATI SUPABASE
+// =============================================
+var SUPABASE_URL = 'https://TUO-PROGETTO.supabase.co';
+var SUPABASE_KEY = 'TUA-ANON-KEY';
+var ADMIN_PIN = '1234';
+// =============================================
+
+var VOID_TH = 1.15;
+var MAX_BETS = 10;
+var BONUS_MAP = {7:1,8:2,9:3,10:5};
+var PRIZE_D = [0.43,0.26,0.15,0.10,0.06];
+var PENALTY_PTS = -2;
+var PENALTY_EUR = 10;
+var ENTRY_PRIZE = 5;
+
+var sb = null;
+var viewingPl = null;
+
+function init() {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  document.getElementById('pg-loading').style.display = 'none';
+  showPage('pg-login');
+}
+
+function flash(m,t){var el=document.getElementById('toast');el.textContent=m;el.className=t==='error'?'toast-err':t==='success'?'toast-ok':'';el.style.display='block';setTimeout(function(){el.style.display='none';},2200);}
+
+function showPage(id){var pp=document.querySelectorAll('.page');for(var i=0;i<pp.length;i++)pp[i].classList.remove('active');var el=document.getElementById(id);if(el)el.classList.add('active');}
+
+function setNav(tab){var map={dash:'nav-dash',esiti:'nav-esiti',players:'nav-players',premio:'nav-premio'};
+  Object.keys(map).forEach(function(k){var el=document.getElementById(map[k]);if(el)el.className=k===tab?'nav-btn act':'nav-btn';});}
+
+function goTab(tab){setNav(tab);
+  if(tab==='dash')loadDash();else if(tab==='esiti')loadEsiti();else if(tab==='players')loadPlayers();else if(tab==='premio')loadPremio();}
+
+function doLogin(){var p=document.getElementById('admin-pin').value;if(p===ADMIN_PIN){document.getElementById('admin-pin').value='';document.getElementById('main-nav').style.display='flex';goTab('dash');}else{flash('PIN errato','error');document.getElementById('admin-pin').value='';}}
+function doLogout(){document.getElementById('main-nav').style.display='none';showPage('pg-login');}
+
+// ===== HELPERS =====
+async function getCurrentMd(){var c=await sb.from('config').select('value').eq('key','current_matchday').single();if(!c.data||!c.data.value||c.data.value==='null')return null;var m=await sb.from('matchdays').select('*').eq('id',c.data.value).single();return m.data||null;}
+async function getBets(mdId){var r=await sb.from('bets').select('*').eq('matchday_id',mdId);return r.data||[];}
+async function getPrizePool(){var r=await sb.from('prize_pool').select('*').eq('id',1).single();return r.data||{base:0,matchday:0,penalties:0,winnings:0};}
+function totalPrize(pp){return(pp.base||0)+(pp.matchday||0)+(pp.penalties||0)+(pp.winnings||0);}
+async function getNameById(id){var r=await sb.from('participants').select('name').eq('id',id).single();return r.data?r.data.name:'?';}
+async function getParticipants(){var r=await sb.from('participants').select('*').order('name');return r.data||[];}
+
+// ===== DASHBOARD =====
+async function loadDash(){
+  var md = await getCurrentMd();
+  var mdH = '';
+  if(md){
+    var bets = await getBets(md.id);
+    var label = md.status==='open'?'APERTA':md.status==='locked'?'CHIUSA — SEGNA ESITI':'CALCOLATA';
+    var cls = md.status==='open'?'md-open':'md-locked';
+    var bCls = md.status==='open'?'badge-green':'badge-gold';
+    mdH = '<div class="md-card '+cls+'"><div class="badge '+bCls+'">GIORNATA '+md.number+' — '+label+'</div>';
+    mdH += '<div style="color:var(--gray-400);font-size:13px;margin-top:6px">'+bets.length+' schedine</div></div>';
+  } else { mdH = '<div class="md-card md-off">Nessuna giornata attiva</div>'; }
+  document.getElementById('dash-md').innerHTML = mdH;
+
+  var gH = '<div class="grid">';
+  if(!md) gH += '<div class="card accent" onclick="openMatchday()"><div class="card-ico">➕</div><div class="card-lbl">Nuova Giornata</div></div>';
+  if(md&&md.status==='open') gH += '<div class="card" style="border-color:rgba(245,166,35,0.4)" onclick="lockMatchday()"><div class="card-ico">🔒</div><div class="card-lbl">Chiudi Giornata</div></div>';
+  if(md&&md.status==='locked'){ gH += '<div class="card accent" onclick="goTab(\'esiti\')"><div class="card-ico">✅</div><div class="card-lbl">Segna Esiti</div></div>';
+    gH += '<div class="card" onclick="calcScores()"><div class="card-ico">🧮</div><div class="card-lbl">Calcola Punteggi</div></div>'; }
+  gH += '<div class="card" onclick="goTab(\'premio\')"><div class="card-ico">🏆</div><div class="card-lbl">Classifica</div></div>';
+  gH += '<div class="card" style="border-color:rgba(228,37,40,0.25)" onclick="resetAll()"><div class="card-ico">🗑️</div><div class="card-lbl">Reset</div></div>';
+  gH += '</div>';
+  document.getElementById('dash-grid').innerHTML = gH;
+
+  // History
+  var mds = await sb.from('matchdays').select('*').order('number',{ascending:false}).limit(3);
+  var hH = '';
+  if(mds.data&&mds.data.length>0){for(var i=0;i<mds.data.length;i++){var m=mds.data[i];var bts=await getBets(m.id);
+    var best=null;var bs=-1;bts.forEach(function(b){if(b.score!==null&&b.score>bs){bs=b.score;best=b.participant_id;}});
+    var info=m.status==='scored'&&best?(await getNameById(best))+' '+bs+'pt':m.status==='open'?'Aperta':'Chiusa';
+    hH+='<div class="hist-r"><span style="font-weight:600">G'+m.number+'</span><span style="font-size:12px;color:var(--gray-400)">'+info+'</span></div>';
+  }}
+  document.getElementById('dash-hist').innerHTML=hH;
+  showPage('pg-dash');
+}
+
+async function openMatchday(){
+  var parts = await getParticipants();
+  var mds = await sb.from('matchdays').select('number').order('number',{ascending:false}).limit(1);
+  var num = (mds.data&&mds.data.length>0) ? mds.data[0].number+1 : 1;
+  var ids = parts.map(function(p){return p.id;});
+  var res = await sb.from('matchdays').insert({number:num,status:'open',active_participants:ids}).select().single();
+  if(res.error) return flash('Errore','error');
+  await sb.from('config').update({value:res.data.id}).eq('key','current_matchday');
+  var pp = await getPrizePool();
+  await sb.from('prize_pool').update({matchday:(pp.matchday||0)+parts.length}).eq('id',1);
+  flash('Giornata '+num+' aperta!','success');
+  loadDash();
+}
+
+async function lockMatchday(){
+  var md = await getCurrentMd();if(!md)return;
+  await sb.from('matchdays').update({status:'locked'}).eq('id',md.id);
+  var bets = await getBets(md.id); var sub={};bets.forEach(function(b){sub[b.participant_id]=true;});
+  var penCount=0;(md.active_participants||[]).forEach(function(pid){if(!sub[pid])penCount++;});
+  if(penCount>0){var pp=await getPrizePool();await sb.from('prize_pool').update({penalties:(pp.penalties||0)+penCount*PENALTY_EUR}).eq('id',1);}
+  flash('Chiusa! Segna gli esiti.','success');loadDash();
+}
+
+async function calcScores(){
+  var md = await getCurrentMd();if(!md||md.status!=='locked')return flash('Chiudi prima la giornata','error');
+  var bets = await getBets(md.id);
+  var err=false;bets.forEach(function(b){(b.results||[]).forEach(function(r){if(r==='pending')err=true;});});
+  if(err) return flash('Segna tutti gli esiti prima!','error');
+
+  for(var i=0;i<bets.length;i++){
+    var b=bets[i];var pts=0;var correct=0;
+    (b.quotes||[]).forEach(function(q,j){
+      if(b.results[j]==='win'){var qv=parseFloat(q);pts+=(qv<VOID_TH)?1:qv;correct++;}
+    });
+    var bon=BONUS_MAP[correct]||0;
+    var score=Math.round((pts+bon)*100)/100;
+    await sb.from('bets').update({score:score,correct:correct,bonus:bon}).eq('id',b.id);
+  }
+  await sb.from('matchdays').update({status:'scored'}).eq('id',md.id);
+  await sb.from('config').update({value:null}).eq('key','current_matchday');
+  flash('Punteggi calcolati!','success');loadDash();
+}
+
+// ===== ESITI =====
+async function loadEsiti(){
+  viewingPl=null;
+  var md=await getCurrentMd();
+  if(!md||md.status==='open'){document.getElementById('esiti-badge').innerHTML='';document.getElementById('esiti-list').innerHTML='<p class="empty">Chiudi prima la giornata</p>';showPage('pg-esiti');return;}
+  document.getElementById('esiti-badge').innerHTML='<div class="badge badge-gold" style="margin-bottom:16px">Giornata '+md.number+'</div>';
+  var bets=await getBets(md.id);
+  var h='';
+  if(bets.length===0){h='<p class="empty">Nessuna schedina</p>';}
+  else{for(var i=0;i<bets.length;i++){var b=bets[i];var name=await getNameById(b.participant_id);
+    var pend=0;(b.results||[]).forEach(function(r){if(r==='pending')pend++;});
+    var ver=b.verified?'<span style="color:var(--green)"> ✓</span>':'';
+    var info=pend>0?'<span style="color:var(--gold)">'+pend+' da segnare</span>':b.score!==null?'<span style="color:var(--green)">'+b.score+' pt</span>':'<span style="color:var(--green)">✓ Pronto</span>';
+    h+='<div class="row" onclick="loadEsitiDet(\''+b.participant_id+'\')"><div><span style="font-weight:600">'+name+'</span>'+ver+'</div>'+info+'</div>';
+  }
+  h+='<button class="btn1" style="margin-top:20px" onclick="calcScores()">CALCOLA PUNTEGGI</button>';}
+  document.getElementById('esiti-list').innerHTML=h;showPage('pg-esiti');
+}
+
+async function loadEsitiDet(pid){
+  viewingPl=pid;var md=await getCurrentMd();if(!md)return;
+  var name=await getNameById(pid);
+  document.getElementById('esiti-det-name').textContent=name;
+  document.getElementById('esiti-det-badge').innerHTML='<div class="badge badge-red">Giornata '+md.number+'</div>';
+
+  var bets=await getBets(md.id);var bet=null;bets.forEach(function(b){if(b.participant_id===pid)bet=b;});
+  if(!bet)return;
+
+  // Actions
+  var aH='<div class="act-btns">';
+  aH+='<button class="btn-sm'+(bet.verified?' green':'')+'" onclick="toggleVerify(\''+bet.id+'\')">'+(bet.verified?'✓ VERIFICATA':'VERIFICA')+'</button>';
+  aH+='<button class="btn-sm gray" onclick="markAll(\''+bet.id+'\',\'win\')">Tutte ✓</button>';
+  aH+='<button class="btn-sm gray" onclick="markAll(\''+bet.id+'\',\'lose\')">Tutte ✗</button></div>';
+  document.getElementById('esiti-det-actions').innerHTML=aH;
+
+  // Attach
+  var attH='';
+  if(bet.attachment_type==='photo'&&bet.attachment_url)attH='<img src="'+bet.attachment_url+'" class="img-full">';
+  else if(bet.attachment_type==='pdf'&&bet.attachment_url)attH='<div class="att-box"><span>📄 Ricevuta</span><a href="'+bet.attachment_url+'" target="_blank">Apri</a></div>';
+  else if(bet.attachment_type==='link'&&bet.attachment_url)attH='<a href="'+bet.attachment_url+'" target="_blank" class="lnk-box">🔗 Apri ricevuta</a>';
+  document.getElementById('esiti-det-attach').innerHTML=attH;
+
+  // Quotes
+  var qH='';
+  (bet.quotes||[]).forEach(function(q,i){
+    var r=(bet.results||[])[i]||'pending';
+    var cls=r==='win'?' win':r==='lose'?' lose':'';
+    var voidT=parseFloat(q)<VOID_TH?'<span class="void-tag">VOID</span>':'';
+    qH+='<div class="q-row'+cls+'"><span class="q-idx">'+(i+1)+'</span><span class="q-val">'+q+voidT+'</span>';
+    qH+='<div style="display:flex;gap:6px">';
+    qH+='<button class="res-btn'+(r==='win'?' w':'')+'" onclick="markOne(\''+bet.id+'\','+i+',\'win\')">✓</button>';
+    qH+='<button class="res-btn'+(r==='lose'?' l':'')+'" onclick="markOne(\''+bet.id+'\','+i+',\'lose\')">✗</button>';
+    qH+='</div></div>';
+  });
+  document.getElementById('esiti-det-quotes').innerHTML=qH;
+
+  var sH='';
+  if(bet.score!==null){sH='<div class="score-card"><div class="score-num">'+bet.score+' pt</div><div class="score-sub">Corretti: '+bet.correct+'/'+MAX_BETS+' | Bonus: +'+bet.bonus+'</div></div>';}
+  document.getElementById('esiti-det-score').innerHTML=sH;
+  showPage('pg-esiti-det');
+}
+
+async function markOne(betId,idx,val){
+  var res=await sb.from('bets').select('results').eq('id',betId).single();
+  if(!res.data)return;var r=res.data.results.slice();r[idx]=val;
+  await sb.from('bets').update({results:r}).eq('id',betId);
+  if(viewingPl)loadEsitiDet(viewingPl);
+}
+
+async function markAll(betId,val){
+  var res=await sb.from('bets').select('results').eq('id',betId).single();
+  if(!res.data)return;var r=res.data.results.map(function(x){return x==='pending'?val:x;});
+  await sb.from('bets').update({results:r}).eq('id',betId);
+  if(viewingPl)loadEsitiDet(viewingPl);
+}
+
+async function toggleVerify(betId){
+  var res=await sb.from('bets').select('verified').eq('id',betId).single();
+  if(!res.data)return;
+  await sb.from('bets').update({verified:!res.data.verified}).eq('id',betId);
+  if(viewingPl)loadEsitiDet(viewingPl);
+}
+
+// ===== GIOCATORI =====
+async function loadPlayers(){
+  var parts=await getParticipants();
+  var h='';
+  parts.forEach(function(p){h+='<div class="pl-row"><span style="font-weight:600">'+p.name+'</span><button class="del-btn" onclick="delPlayer(\''+p.id+'\')">✕</button></div>';});
+  if(parts.length===0)h='<p class="empty">Nessun giocatore</p>';
+  document.getElementById('players-list').innerHTML=h;showPage('pg-players');
+}
+
+async function addPlayer(){
+  var name=document.getElementById('new-name').value.trim();
+  var pin=document.getElementById('new-pin').value.trim();
+  if(!name||!pin)return flash('Nome e PIN richiesti','error');
+  if(pin.length<3)return flash('PIN min 3 cifre','error');
+  var res=await sb.from('participants').insert({name:name,pin:pin});
+  if(res.error)return flash(res.error.message,'error');
+  var pp=await getPrizePool();
+  await sb.from('prize_pool').update({base:(pp.base||0)+ENTRY_PRIZE}).eq('id',1);
+  document.getElementById('new-name').value='';document.getElementById('new-pin').value='';
+  flash(name+' aggiunto!','success');loadPlayers();
+}
+
+async function delPlayer(id){
+  await sb.from('participants').delete().eq('id',id);flash('Rimosso','success');loadPlayers();
+}
+
+// ===== MONTEPREMI =====
+async function loadPremio(){
+  var pp=await getPrizePool();var tp=totalPrize(pp);
+  document.getElementById('premio-total').textContent=tp.toFixed(2)+' €';
+  var bH='<div class="box"><div class="brk"><span>Iscrizioni</span><span>'+(pp.base||0).toFixed(2)+' €</span></div>';
+  bH+='<div class="brk"><span>Giornate</span><span>'+(pp.matchday||0).toFixed(2)+' €</span></div>';
+  bH+='<div class="brk"><span>Penalità</span><span>'+(pp.penalties||0).toFixed(2)+' €</span></div>';
+  bH+='<div class="brk"><span>20% vincite</span><span>'+(pp.winnings||0).toFixed(2)+' €</span></div></div>';
+  document.getElementById('premio-break').innerHTML=bH;
+
+  var aH='<div class="box" style="margin-top:16px"><div class="sec-t" style="margin-top:0">AGGIUNGI MANUALE</div>';
+  aH+='<div class="inline-f"><input class="inp" style="flex:1" type="number" inputmode="decimal" placeholder="€" id="man-prize"><button class="btn-sm" onclick="addPrize()">+</button></div>';
+  aH+='<div class="sec-t">REGISTRA VINCITA (20%)</div>';
+  aH+='<div class="inline-f"><input class="inp" style="flex:1" type="number" inputmode="decimal" placeholder="Vincita €" id="win-inp"><button class="btn-sm" onclick="addWin()">+</button></div></div>';
+  document.getElementById('premio-admin').innerHTML=aH;
+
+  var dH='<div class="box" style="margin-top:16px"><div class="sec-t" style="margin-top:0">DISTRIBUZIONE TOP 5</div>';
+  PRIZE_D.forEach(function(p,i){dH+='<div class="pr-row"><span style="font-weight:700;color:var(--gold);width:30px">'+(i+1)+'°</span><span style="color:var(--gray-400);width:50px">'+(p*100).toFixed(0)+'%</span><span style="font-weight:600">'+(tp*p).toFixed(2)+' €</span></div>';});
+  dH+='</div>';
+  document.getElementById('premio-dist').innerHTML=dH;
+
+  // Classifica
+  var parts=await getParticipants();var mds=await sb.from('matchdays').select('*').eq('status','scored');
+  var sc={};parts.forEach(function(p){sc[p.id]={name:p.name,total:0};});
+  if(mds.data){for(var i=0;i<mds.data.length;i++){var md=mds.data[i];var bets=await getBets(md.id);
+    bets.forEach(function(b){if(sc[b.participant_id]&&b.score!==null)sc[b.participant_id].total+=b.score;});
+    var sub={};bets.forEach(function(b){sub[b.participant_id]=true;});
+    (md.active_participants||[]).forEach(function(pid){if(!sub[pid]&&sc[pid])sc[pid].total+=PENALTY_PTS;});}}
+  var arr=Object.keys(sc).map(function(k){return{name:sc[k].name,total:sc[k].total};});
+  arr.sort(function(a,b){return b.total-a.total;});
+  var cH='';var posCol=['#F5A623','#A0AEC0','#CD7F32'];
+  arr.slice(0,10).forEach(function(s,i){var bg=i<3?posCol[i]:'var(--navy-light)';var col=i<3?'#000':'var(--gray-400)';
+    cH+='<div class="st-row"><div class="pos-c" style="background:'+bg+';color:'+col+'">'+(i+1)+'</div><div style="flex:1;font-weight:600">'+s.name+'</div><div style="font-weight:800;color:var(--red)">'+s.total.toFixed(2)+'</div></div>';});
+  document.getElementById('premio-class').innerHTML=cH||'<p class="empty">Nessun dato</p>';
+  showPage('pg-premio');
+}
+
+async function addPrize(){var v=parseFloat(document.getElementById('man-prize').value);if(isNaN(v)||v<=0)return flash('Importo non valido','error');
+  var pp=await getPrizePool();await sb.from('prize_pool').update({base:(pp.base||0)+v}).eq('id',1);document.getElementById('man-prize').value='';flash('+'+v+'€','success');loadPremio();}
+
+async function addWin(){var v=parseFloat(document.getElementById('win-inp').value);if(isNaN(v)||v<=0)return flash('Importo non valido','error');
+  var c=Math.round(v*0.2*100)/100;var pp=await getPrizePool();await sb.from('prize_pool').update({winnings:(pp.winnings||0)+c}).eq('id',1);
+  document.getElementById('win-inp').value='';flash('20% di '+v+' = '+c+'€','success');loadPremio();}
+
+async function resetAll(){if(!confirm('Cancellare TUTTI i dati?'))return;
+  await sb.from('bets').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  await sb.from('matchdays').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  await sb.from('participants').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  await sb.from('prize_pool').update({base:0,matchday:0,penalties:0,winnings:0}).eq('id',1);
+  await sb.from('config').update({value:null}).eq('key','current_matchday');
+  flash('Reset completato','success');loadDash();}
+
+window.onload=init;
+</script>
+</body>
+</html>
