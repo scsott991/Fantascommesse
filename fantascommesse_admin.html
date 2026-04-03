@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>FantaScommesse — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#080E1E;--s1:#0F1729;--s2:#182035;--bd:#1E2A45;--r:#E42528;--r2:#B91C1F;--rg:rgba(228,37,40,.14);--w:#FCFCFD;--t0:#E8ECF4;--t1:#C2CAD8;--t2:#7B869C;--t3:#3D4659;--gd:#F5A623;--gn:#2DD667;--gg:rgba(45,214,103,.1);--rb:rgba(228,37,40,.08)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--w);max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:74px;-webkit-font-smoothing:antialiased}
+.pg{padding:16px 20px 24px;display:none}.pg.on{display:block}
+
+#toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:11px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:999;display:none;max-width:90%}
+.tok{background:rgba(20,83,45,.95);color:#86efac}.ter{background:rgba(127,29,29,.95);color:#fca5a5}
+
+.logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(–r),var(–r2));display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(228,37,40,.3);margin:0 auto}
+.logo span{font-size:21px;font-weight:800;color:#fff;letter-spacing:-1px}
+
+.btn{width:100%;padding:13px;border:none;border-radius:11px;background:linear-gradient(135deg,var(–r),var(–r2));color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+.btn:active{opacity:.85}
+.btn-g{background:linear-gradient(135deg,#128C3D,#0F7A34)}
+.bs{padding:8px 14px;border:none;border-radius:8px;background:var(–r);color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+.bs.g{background:var(–gn);color:#000}.bs.gy{background:var(–bd);color:var(–t1)}
+.bo{width:100%;padding:11px;border:1px solid var(–bd);border-radius:11px;background:transparent;color:var(–t1);font-size:13px;cursor:pointer;text-align:center}
+.bk{background:none;border:none;color:var(–r);font-size:15px;font-weight:600;cursor:pointer;padding:6px 0 14px}
+.lo{background:none;border:1px solid var(–bd);border-radius:8px;color:var(–t1);font-size:12px;padding:5px 12px;cursor:pointer}
+
+.lb{display:block;font-size:11px;font-weight:700;color:var(–t1);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
+.ip{width:100%;padding:11px 13px;background:var(–s1);border:1px solid var(–bd);border-radius:10px;color:var(–w);font-size:16px;outline:none;-webkit-appearance:none;font-family:inherit}
+.ip::placeholder{color:var(–t3)}
+.ilf{display:flex;gap:8px;align-items:center}
+
+.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-top:8px}
+.hdn{font-size:20px;font-weight:800;color:var(–w)}.hds{font-size:12px;color:var(–t2);margin-top:1px}
+.h2{font-size:20px;font-weight:800;margin-bottom:12px;color:var(–w)}
+.ht{font-size:13px;color:var(–t1);margin-bottom:10px}
+.ey{font-size:14px;color:var(–t2);text-align:center;padding:28px 0}
+.st{font-size:10px;font-weight:700;color:var(–t1);letter-spacing:1.2px;margin:18px 0 8px;text-transform:uppercase}
+
+.mc{border-radius:14px;padding:14px 16px;margin-bottom:14px;text-align:center}
+.mco{background:linear-gradient(135deg,var(–s1),var(–s2));border:1px solid rgba(45,214,103,.2)}
+.mcl{background:var(–s1);border:1px solid rgba(245,166,35,.2)}
+.mcx{background:var(–s1);border:1px solid var(–bd);color:var(–t1);font-size:14px;padding:16px}
+.bd{display:inline-block;font-size:11px;font-weight:700;padding:4px 12px;border-radius:14px;letter-spacing:.3px}
+.bdg{background:var(–gg);color:var(–gn)}.bdy{background:rgba(245,166,35,.12);color:var(–gd)}.bdr{background:var(–rg);color:var(–r)}
+.cdwn{font-size:13px;color:var(–gd);margin-top:5px;font-weight:700}
+.cdwn.urg{color:var(–r);font-size:15px}
+
+.gd{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.cd{background:var(–s1);border:1px solid var(–bd);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;color:var(–w)}
+.cd:active{background:var(–s2)}
+.cd.ac{border-color:rgba(228,37,40,.3);background:linear-gradient(135deg,var(–s1),#1A1028)}
+.ci{font-size:26px;margin-bottom:6px}.cl{font-size:12px;font-weight:600;color:var(–t1)}
+
+.rw{width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(–s1);border:1px solid var(–bd);border-radius:11px;margin-bottom:7px;cursor:pointer;color:var(–w);font-size:14px;text-align:left}
+.rw:active{background:var(–s2)}
+
+.qr{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;margin-bottom:5px;border:1px solid var(–bd)}
+.qr.w{background:var(–gg);border-color:var(–gn)}.qr.l{background:var(–rb);border-color:var(–r)}
+.qi2{width:22px;font-size:11px;font-weight:700;color:var(–t1);text-align:center}
+.qv{flex:1;font-size:15px;font-weight:600;color:var(–t0)}
+.vt{display:inline-block;margin-left:6px;font-size:8px;font-weight:800;color:var(–gd);background:rgba(245,166,35,.15);padding:2px 5px;border-radius:3px;vertical-align:middle}
+.rb2{width:34px;height:34px;border-radius:8px;border:1px solid var(–bd);background:var(–s1);color:var(–t2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.rb2:active{opacity:.8}
+.rb2.rw3{background:var(–gg);border-color:var(–gn);color:var(–gn)}.rb2.rl{background:var(–rb);border-color:var(–r);color:var(–r)}
+
+.sc{background:var(–rg);border-radius:12px;padding:14px 16px;text-align:center;margin-top:14px;border:1px solid rgba(228,37,40,.15)}
+.sn2{font-size:26px;font-weight:800;color:var(–r)}.ss2{font-size:11px;color:var(–t1);margin-top:3px}
+
+.sr{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(–s1);border:1px solid var(–bd);border-radius:11px;margin-bottom:7px}
+.sr.f{border-color:rgba(245,166,35,.3)}
+.pc{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+
+.bx{background:var(–s1);border-radius:14px;padding:14px 16px;border:1px solid var(–bd);margin-top:14px}
+.brk{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(–bg);font-size:13px;color:var(–t0)}
+.prw{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(–bg);font-size:13px}
+.pr2{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(–s1);border:1px solid var(–bd);border-radius:11px;margin-bottom:7px}
+.dbb{width:30px;height:30px;border-radius:7px;border:1px solid rgba(228,37,40,.2);background:var(–rb);color:var(–r);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.hr2{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(–s1);border:1px solid var(–bd);border-radius:9px;margin-bottom:5px;font-size:13px;color:var(–t0)}
+.ifull{width:100%;max-height:280px;object-fit:contain;border-radius:10px;margin:10px 0}
+.abx{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(–s1);border-radius:10px;margin:10px 0;border:1px solid var(–bd);font-size:13px;color:var(–t0)}
+.abx a{color:var(–r);font-weight:600;text-decoration:none}
+.lbx{display:block;padding:10px;background:var(–rg);border-radius:10px;margin:10px 0;border:1px solid rgba(228,37,40,.15);color:var(–r);font-weight:600;font-size:13px;text-decoration:none;text-align:center}
+.abtn{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+
+.nv{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;background:var(–bg);border-top:1px solid var(–bd);z-index:100}
+.nb{flex:1;padding:7px 0 5px;background:none;border:none;color:var(–t3);cursor:pointer;text-align:center;position:relative}
+.nb.a{color:var(–r)}.nb.a::after{content:’’;position:absolute;top:0;left:30%;right:30%;height:2px;background:var(–r);border-radius:0 0 2px 2px}
+.ni{font-size:19px}.nl{font-size:9px;font-weight:700;margin-top:1px;letter-spacing:.3px;color:inherit}
+
+.ld{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:var(–bg)}
+.reg-section{margin-bottom:14px}.reg-title{font-size:14px;font-weight:700;color:var(–r);margin-bottom:5px}
+.reg-text{font-size:13px;color:var(–t0);line-height:1.6}
+.reg-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;color:var(–t0)}
+.miss{background:var(–rb);border:1px solid rgba(228,37,40,.2);border-radius:10px;padding:10px 14px;margin-bottom:5px;font-size:13px;color:var(–t0);display:flex;justify-content:space-between}
+/* WhatsApp */
+.wa-btn{width:100%;padding:13px;border:none;border-radius:11px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
+.wa-btn:active{opacity:.85}
+.wa-opt{padding:11px 14px;background:var(–s1);border:1px solid var(–bd);border-radius:11px;margin-bottom:7px;cursor:pointer;color:var(–t0);font-size:14px}
+.wa-opt:active{background:var(–s2)}
+/* Riepilogo */
+.riep{background:var(–s1);border:1px solid var(–bd);border-radius:12px;padding:14px 16px;margin-top:12px}
+.riep-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;color:var(–t0);border-bottom:1px solid var(–bg)}
+.riep-row:last-child{border:none}
+</style>
+
+</head>
+<body>
+<div id="toast"></div>
+<div id="pg-ld" class="ld"><div class="logo"><span>FS</span></div><div style="color:var(--t2);margin-top:14px;font-size:13px">Caricamento...</div></div>
+
+<!-- LOGIN -->
+
+<div id="pg-login" class="pg">
+<div style="text-align:center;padding:50px 24px 40px">
+  <div class="logo"><span>FS</span></div>
+  <h1 style="font-size:26px;font-weight:800;margin:18px 0 4px;color:var(--w)">FantaScommesse</h1>
+  <p style="font-size:13px;color:var(--t1);margin-bottom:28px">Area Admin</p>
+  <div style="max-width:280px;margin:0 auto;display:flex;flex-direction:column;gap:10px">
+    <input class="ip" type="password" inputmode="numeric" placeholder="PIN Admin" id="a-pin">
+    <button class="btn" onclick="doLogin()">ACCEDI</button>
+  </div>
+</div>
+</div>
+
+<!-- DASHBOARD -->
+
+<div id="pg-dash" class="pg">
+<div class="hd"><div><div class="hdn">Admin</div><div class="hds">FantaScommesse</div></div><button class="lo" onclick="doLogout()">Esci</button></div>
+<div id="d-md"></div>
+<div id="d-miss"></div>
+<div id="d-grid"></div>
+<div class="st">ULTIME GIORNATE</div>
+<div id="d-hist"></div>
+</div>
+
+<!-- NUOVA GIORNATA -->
+
+<div id="pg-new" class="pg">
+<button class="bk" onclick="goTab('dash')">← Indietro</button>
+<h2 class="h2">Nuova Giornata</h2>
+<div class="lb">NUMERO GIORNATA</div>
+<input class="ip" type="number" inputmode="numeric" id="nw-num" placeholder="Es: 1">
+<div class="lb" style="margin-top:14px">DEADLINE (data e ora)</div>
+<input class="ip" type="datetime-local" id="nw-dl">
+<p class="ht" style="margin-top:6px">Allo scadere si bloccano i caricamenti automaticamente.</p>
+<button class="btn" style="margin-top:20px" onclick="createMd()">APRI GIORNATA</button>
+</div>
+
+<!-- MODIFICA DEADLINE -->
+
+<div id="pg-edl" class="pg">
+<button class="bk" onclick="goTab('dash')">← Indietro</button>
+<h2 class="h2">Modifica Deadline</h2>
+<div class="lb">NUOVA DEADLINE</div>
+<input class="ip" type="datetime-local" id="edl-val">
+<button class="btn" style="margin-top:16px" onclick="updateDl()">SALVA</button>
+</div>
+
+<!-- ESITI LISTA -->
+
+<div id="pg-esiti" class="pg">
+<h2 class="h2">Segna Esiti</h2>
+<div id="e-info"></div>
+<div id="e-list"></div>
+</div>
+
+<!-- ESITI DETTAGLIO -->
+
+<div id="pg-edet" class="pg">
+<button class="bk" onclick="loadEsiti()">← Indietro</button>
+<h2 class="h2" id="ed-name"></h2>
+<div id="ed-badge"></div>
+<div id="ed-acts"></div>
+<div id="ed-att"></div>
+<div id="ed-quotes"></div>
+<div id="ed-score"></div>
+</div>
+
+<!-- RIEPILOGO POST-CALCOLO -->
+
+<div id="pg-riep" class="pg">
+<button class="bk" onclick="goTab('dash')">← Dashboard</button>
+<h2 class="h2">Riepilogo Giornata</h2>
+<div id="riep-content"></div>
+</div>
+
+<!-- GIOCATORI -->
+
+<div id="pg-pl" class="pg">
+<h2 class="h2">Giocatori</h2>
+<input class="ip" placeholder="Nome" id="pl-n">
+<input class="ip" style="margin-top:7px" placeholder="PIN (min 3 cifre)" type="password" inputmode="numeric" id="pl-p">
+<button class="btn" style="margin-top:10px" onclick="addPl()">AGGIUNGI</button>
+<div style="margin-top:20px" id="pl-list"></div>
+</div>
+
+<!-- MONTEPREMI -->
+
+<div id="pg-pr" class="pg">
+<h2 class="h2">Montepremi</h2>
+<div id="pr-total" style="font-size:38px;font-weight:800;color:var(--r);text-align:center;margin:18px 0"></div>
+<div id="pr-brk"></div>
+<div id="pr-adm"></div>
+<div id="pr-dist"></div>
+<div class="st">CLASSIFICA</div>
+<div id="pr-cls"></div>
+</div>
+
+<!-- WHATSAPP -->
+
+<div id="pg-wa" class="pg">
+<button class="bk" onclick="goTab('dash')">← Indietro</button>
+<h2 class="h2">📱 Invia su WhatsApp</h2>
+<p class="ht">Seleziona il messaggio da condividere</p>
+<div class="wa-opt" onclick="waMsg('open')">📢 Giornata aperta</div>
+<div class="wa-opt" onclick="waMsg('closed')">🔒 Giornata chiusa</div>
+<div class="wa-opt" onclick="waMsg('scores')">🏆 Classifica aggiornata</div>
+<div class="wa-opt" onclick="waMsg('reminder')">⏰ Reminder deadline</div>
+<div class="wa-opt" onclick="waMsg('results')">📊 Risultati giornata</div>
+</div>
+
+<!-- REGOLAMENTO -->
+
+<div id="pg-reg" class="pg">
+<h2 class="h2">Regolamento</h2>
+<div class="reg-section"><div class="reg-title">Il Gioco</div><div class="reg-text">FantaScommesse è un gioco a premi tra i clienti dell'agenzia. Ogni giornata di Serie A, i partecipanti giocano una schedina da 10 scommesse (qualsiasi tipo). L'app traccia quote, esiti e punteggi per una classifica stagionale.</div></div>
+<div class="reg-section"><div class="reg-title">Iscrizione e Costi</div>
+<div class="reg-row"><span>Iscrizione</span><span style="color:var(--w);font-weight:600">7€ (5 monte + 2 gestore)</span></div>
+<div class="reg-row"><span>Schedina</span><span style="color:var(--w);font-weight:600">10€/giornata</span></div>
+<div class="reg-row"><span>Scommesse</span><span style="color:var(--w);font-weight:600">10 per giornata</span></div>
+<div class="reg-row"><span>Premio giornata</span><span style="color:var(--w);font-weight:600">25€ fissi</span></div></div>
+<div class="reg-section"><div class="reg-title">Punteggio</div>
+<div class="reg-text">Corretto = punti pari alla quota. Errato = 0 punti. Quota ≤ 1.15 = VOID (1 punto fisso).</div>
+<div class="reg-row" style="margin-top:5px"><span>7 corretti</span><span style="color:var(--gn);font-weight:700">+1 bonus</span></div>
+<div class="reg-row"><span>8 corretti</span><span style="color:var(--gn);font-weight:700">+2 bonus</span></div>
+<div class="reg-row"><span>9 corretti</span><span style="color:var(--gn);font-weight:700">+3 bonus</span></div>
+<div class="reg-row"><span>10 corretti</span><span style="color:var(--gn);font-weight:700">+5 bonus</span></div></div>
+<div class="reg-section"><div class="reg-title">Penalità</div><div class="reg-text">Mancato caricamento: -2 punti in classifica + 10€ al montepremi.</div></div>
+<div class="reg-section"><div class="reg-title">Montepremi Finale (Top 5)</div>
+<div class="reg-row"><span>1° posto</span><span style="color:var(--gd);font-weight:700">43%</span></div>
+<div class="reg-row"><span>2° posto</span><span style="color:var(--gd);font-weight:700">26%</span></div>
+<div class="reg-row"><span>3° posto</span><span style="color:var(--gd);font-weight:700">15%</span></div>
+<div class="reg-row"><span>4° posto</span><span style="color:var(--gd);font-weight:700">10%</span></div>
+<div class="reg-row"><span>5° posto</span><span style="color:var(--gd);font-weight:700">6%</span></div></div>
+</div>
+
+<!-- STORICO -->
+
+<div id="pg-stor" class="pg">
+<button class="bk" onclick="goTab('dash')">← Indietro</button>
+<h2 class="h2">Storico Giornate</h2>
+<div id="stor-list"></div>
+</div>
+
+<!-- IMPOSTAZIONI (nascosto) -->
+
+<div id="pg-set" class="pg">
+<button class="bk" onclick="goTab('dash')">← Indietro</button>
+<h2 class="h2">Impostazioni</h2>
+<p class="ht">Zona pericolosa</p>
+<button class="btn" style="background:#7f1d1d" onclick="resetAll()">CANCELLA TUTTI I DATI</button>
+</div>
+
+<!-- NAV -->
+
+<div class="nv" id="nav" style="display:none">
+<button class="nb a" id="n-dash" onclick="goTab('dash')"><div class="ni">📊</div><div class="nl">Dashboard</div></button>
+<button class="nb" id="n-esiti" onclick="goTab('esiti')"><div class="ni">✅</div><div class="nl">Esiti</div></button>
+<button class="nb" id="n-pl" onclick="goTab('pl')"><div class="ni">👥</div><div class="nl">Giocatori</div></button>
+<button class="nb" id="n-pr" onclick="goTab('pr')"><div class="ni">💰</div><div class="nl">Premi</div></button>
+<button class="nb" id="n-reg" onclick="goTab('reg')"><div class="ni">📖</div><div class="nl">Regole</div></button>
+</div>
+
+<script>
+// =============================================
+var SURL='https://TUO-PROGETTO.supabase.co';
+var SKEY='TUA-ANON-KEY';
+var APIN='1234';
+// =============================================
+var VTH=1.15,MX=10,BM={7:1,8:2,9:3,10:5},PD=[.43,.26,.15,.10,.06],PPTS=-2,PEUR=10,EPRZ=5;
+var sb,vPl=null,cdT=null;
+
+function init(){
+  sb=window.supabase.createClient(SURL,SKEY);
+  // Session
+  if(sessionStorage.getItem('fs_admin')==='1'){$('pg-ld').style.display='none';$('nav').style.display='flex';goTab('dash');return;}
+  $('pg-ld').style.display='none';show('pg-login');
+}
+function $(id){return document.getElementById(id);}
+function show(id){var pp=document.querySelectorAll('.pg');for(var i=0;i<pp.length;i++)pp[i].classList.remove('on');$(id).classList.add('on');}
+function flash(m,t){var e=$('toast');e.textContent=m;e.className=t==='error'?'ter':'tok';e.style.display='block';setTimeout(function(){e.style.display='none';},2500);}
+function setNav(t){var m={dash:'n-dash',esiti:'n-esiti',pl:'n-pl',pr:'n-pr',reg:'n-reg'};Object.keys(m).forEach(function(k){$(m[k]).className=k===t?'nb a':'nb';});}
+function goTab(t){setNav(t);vPl=null;if(cdT)clearInterval(cdT);
+if(t==='dash')loadDash();else if(t==='esiti')loadEsiti();else if(t==='pl')loadPl();else if(t==='pr')loadPr();else if(t==='reg')show('pg-reg');}
+
+function doLogin(){if($('a-pin').value===APIN){$('a-pin').value='';sessionStorage.setItem('fs_admin','1');$('nav').style.display='flex';goTab('dash');}else{flash('PIN errato','error');$('a-pin').value='';}}
+function doLogout(){sessionStorage.removeItem('fs_admin');$('nav').style.display='none';if(cdT)clearInterval(cdT);show('pg-login');}
+
+// === Helpers ===
+async function curMd(){var c=await sb.from('config').select('value').eq('key','current_matchday').single();if(!c.data||!c.data.value||c.data.value==='null')return null;var m=await sb.from('matchdays').select('*').eq('id',c.data.value).single();return m.data||null;}
+async function bets(mid){return(await sb.from('bets').select('*').eq('matchday_id',mid)).data||[];}
+async function ppool(){return(await sb.from('prize_pool').select('*').eq('id',1).single()).data||{base:0,matchday:0,penalties:0,winnings:0};}
+function tp(p){return(p.base||0)+(p.matchday||0)+(p.penalties||0)+(p.winnings||0);}
+async function nm(id){var r=await sb.from('participants').select('name').eq('id',id).single();return r.data?r.data.name:'?';}
+async function pts2(){return(await sb.from('participants').select('*').order('name')).data||[];}
+function fmtD(dl){if(!dl)return'—';var d=new Date(dl);return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
+function fmtCD(dl){var d=new Date(dl).getTime()-Date.now();if(d<=0)return'Scaduta';var h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);if(h>24)return Math.floor(h/24)+'g '+h%24+'h';return h+'h '+m+'m '+s+'s';}
+
+async function checkDL(md){
+  if(!md||md.status!=='open'||!md.deadline)return;
+  if(new Date(md.deadline).getTime()<=Date.now()){
+    await sb.from('matchdays').update({status:'locked'}).eq('id',md.id);
+    var bs=await bets(md.id);var sub={};bs.forEach(function(b){sub[b.participant_id]=true;});
+    var pen=0;(md.active_participants||[]).forEach(function(pid){if(!sub[pid])pen++;});
+    if(pen>0){var p=await ppool();await sb.from('prize_pool').update({penalties:(p.penalties||0)+pen*PEUR}).eq('id',1);}
+  }
+}
+
+// === DASHBOARD ===
+async function loadDash(){
+  var md=await curMd();if(md)await checkDL(md);md=await curMd();if(cdT)clearInterval(cdT);
+  var mh='';
+  if(md){var bs2=await bets(md.id);var lbl=md.status==='open'?'APERTA':md.status==='locked'?'CHIUSA — SEGNA ESITI':'CALCOLATA';
+    var cls=md.status==='open'?'mco':'mcl';var bc=md.status==='open'?'bdg':'bdy';
+    mh='<div class="mc '+cls+'"><div class="bd '+bc+'">G'+md.number+' — '+lbl+'</div>';
+    mh+='<div style="color:var(--t1);font-size:12px;margin-top:5px">'+bs2.length+' schedine';
+    if(md.deadline)mh+=' · Deadline: '+fmtD(md.deadline);
+    mh+='</div>';
+    if(md.status==='open'&&md.deadline){var rem=new Date(md.deadline).getTime()-Date.now();var urg=rem<1800000;
+      mh+='<div class="cdwn'+(urg?' urg':'')+'" id="cd-t">'+fmtCD(md.deadline)+'</div>';
+      cdT=setInterval(function(){var el=$('cd-t');if(el){var r2=new Date(md.deadline).getTime()-Date.now();el.textContent=fmtCD(md.deadline);el.className=r2<1800000?'cdwn urg':'cdwn';}},1000);}
+    mh+='</div>';
+  }else{mh='<div class="mc mcx">Nessuna giornata attiva</div>';}
+  $('d-md').innerHTML=mh;
+
+  // Chi non ha caricato
+  var missH='';
+  if(md&&(md.status==='open'||md.status==='locked')){
+    var bs3=await bets(md.id);var sub2={};bs3.forEach(function(b){sub2[b.participant_id]=true;});
+    var missing=[];(md.active_participants||[]).forEach(function(pid){if(!sub2[pid])missing.push(pid);});
+    if(missing.length>0){missH='<div class="st" style="margin-top:0">NON HANNO CARICATO</div>';
+      for(var mi=0;mi<missing.length;mi++){var mn=await nm(missing[mi]);missH+='<div class="miss"><span>'+mn+'</span><span style="color:var(--r)">❌</span></div>';}}}
+  $('d-miss').innerHTML=missH;
+
+  var gh='<div class="gd">';
+  if(!md)gh+='<div class="cd ac" onclick="show(\'pg-new\');prefillNew()"><div class="ci">➕</div><div class="cl">Nuova Giornata</div></div>';
+  if(md&&md.status==='open')gh+='<div class="cd" onclick="showEdl()"><div class="ci">⏰</div><div class="cl">Modifica Deadline</div></div>';
+  if(md&&md.status==='locked')gh+='<div class="cd ac" onclick="goTab(\'esiti\')"><div class="ci">✅</div><div class="cl">Segna Esiti</div></div>';
+  if(md&&md.status==='locked')gh+='<div class="cd" onclick="calcScores()"><div class="ci">🧮</div><div class="cl">Calcola Punteggi</div></div>';
+  gh+='<div class="cd" onclick="show(\'pg-wa\')"><div class="ci">📱</div><div class="cl">WhatsApp</div></div>';
+  gh+='<div class="cd" onclick="loadStorico()"><div class="ci">📊</div><div class="cl">Storico</div></div>';
+  gh+='<div class="cd" onclick="goTab(\'pr\')"><div class="ci">🏆</div><div class="cl">Classifica</div></div>';
+  gh+='<div class="cd" onclick="show(\'pg-set\')" style="border-color:var(--t3)"><div class="ci">⚙️</div><div class="cl">Impostazioni</div></div>';
+  gh+='</div>';$('d-grid').innerHTML=gh;
+
+  var mds=await sb.from('matchdays').select('*').order('number',{ascending:false}).limit(4);var hh='';
+  if(mds.data&&mds.data.length>0){for(var i=0;i<mds.data.length;i++){var m=mds.data[i];var b=await bets(m.id);
+    var best=null,bsc=-1;b.forEach(function(x){if(x.score!==null&&x.score>bsc){bsc=x.score;best=x.participant_id;}});
+    var info=m.status==='scored'&&best?(await nm(best))+' '+bsc+'pt':m.status==='open'?'Aperta':'Chiusa';
+    hh+='<div class="hr2"><span style="font-weight:600">G'+m.number+'</span><span style="color:var(--t2)">'+info+'</span></div>';}}
+  else{hh='<p class="ey">Nessuna giornata</p>';}
+  $('d-hist').innerHTML=hh;show('pg-dash');
+}
+
+async function prefillNew(){var mds=await sb.from('matchdays').select('number').order('number',{ascending:false}).limit(1);var next=(mds.data&&mds.data.length>0)?mds.data[0].number+1:1;$('nw-num').value=next;var now=new Date();now.setHours(14,0,0,0);$('nw-dl').value=now.toISOString().slice(0,16);}
+async function createMd(){var num=parseInt($('nw-num').value),dl=$('nw-dl').value;if(!num||num<1)return flash('Numero non valido','error');if(!dl)return flash('Imposta deadline','error');var p=await pts2();var ids=p.map(function(x){return x.id;});var r=await sb.from('matchdays').insert({number:num,status:'open',active_participants:ids,deadline:new Date(dl).toISOString()}).select().single();if(r.error)return flash(r.error.message,'error');await sb.from('config').update({value:r.data.id}).eq('key','current_matchday');var pr=await ppool();await sb.from('prize_pool').update({matchday:(pr.matchday||0)+p.length}).eq('id',1);flash('Giornata '+num+' aperta!','success');goTab('dash');}
+
+async function showEdl(){var md=await curMd();if(!md)return;var d=md.deadline?new Date(md.deadline).toISOString().slice(0,16):'';$('edl-val').value=d;show('pg-edl');}
+async function updateDl(){var v=$('edl-val').value;if(!v)return flash('Imposta data/ora','error');var md=await curMd();if(!md)return;await sb.from('matchdays').update({deadline:new Date(v).toISOString()}).eq('id',md.id);flash('Deadline aggiornata!','success');goTab('dash');}
+
+// === ESITI ===
+async function loadEsiti(){vPl=null;var md=await curMd();if(md)await checkDL(md);md=await curMd();
+if(!md||md.status==='open'){$('e-info').innerHTML='';$('e-list').innerHTML='<p class="ey">'+(!md?'Nessuna giornata attiva':'Attendi la deadline.')+'</p>';show('pg-esiti');return;}
+$('e-info').innerHTML='<div class="bd bdy" style="margin-bottom:14px">Giornata '+md.number+'</div>';
+var bs2=await bets(md.id);var h='';
+if(bs2.length===0){h='<p class="ey">Nessuna schedina caricata</p>';}
+else{for(var i=0;i<bs2.length;i++){var b=bs2[i];var n=await nm(b.participant_id);
+  var pend=0;(b.results||[]).forEach(function(r){if(r==='pending')pend++;});
+  var ver=b.verified?'<span style="color:var(--gn)"> ✓</span>':'';
+  var info=pend>0?'<span style="color:var(--gd)">'+pend+' da segnare</span>':b.score!==null?'<span style="color:var(--gn)">'+b.score+' pt</span>':'<span style="color:var(--gn)">✓ Pronto</span>';
+  h+='<div class="rw" onclick="loadEDet(\''+b.participant_id+'\')"><div><span style="font-weight:600">'+n+'</span>'+ver+'</div>'+info+'</div>';}
+h+='<button class="btn" style="margin-top:16px" onclick="calcScores()">CALCOLA PUNTEGGI</button>';}
+$('e-list').innerHTML=h;show('pg-esiti');}
+
+async function loadEDet(pid){vPl=pid;var md=await curMd();if(!md)return;var n=await nm(pid);
+$('ed-name').textContent=n;$('ed-badge').innerHTML='<div class="bd bdr">Giornata '+md.number+'</div>';
+var bs2=await bets(md.id);var bt=null;bs2.forEach(function(b){if(b.participant_id===pid)bt=b;});if(!bt)return;
+$('ed-acts').innerHTML='<div class="abtn"><button class="bs'+(bt.verified?' g':'')+'" onclick="togV(\''+bt.id+'\')">'+( bt.verified?'✓ Verificata':'Verifica')+'</button><button class="bs gy" onclick="mAll(\''+bt.id+'\',\'win\')">Tutte ✓</button><button class="bs gy" onclick="mAll(\''+bt.id+'\',\'lose\')">Tutte ✗</button></div>';
+var ath='';
+if(bt.attachment_type==='photo'&&bt.attachment_url)ath='<img src="'+bt.attachment_url+'" class="ifull">';
+else if(bt.attachment_type==='pdf'&&bt.attachment_url)ath='<div class="abx"><span>📄 Ricevuta</span><a href="'+bt.attachment_url+'" target="_blank">Apri</a></div>';
+else if(bt.attachment_type==='link'&&bt.attachment_url)ath='<a href="'+bt.attachment_url+'" target="_blank" class="lbx">🔗 Apri ricevuta</a>';
+$('ed-att').innerHTML=ath;
+var qh='';(bt.quotes||[]).forEach(function(q,i){var r=(bt.results||[])[i]||'pending';var c=r==='win'?' w':r==='lose'?' l':'';var vd=parseFloat(q)<=VTH?'<span class="vt">VOID</span>':'';
+qh+='<div class="qr'+c+'"><span class="qi2">'+(i+1)+'</span><span class="qv">'+q+vd+'</span><div style="display:flex;gap:5px"><button class="rb2'+(r==='win'?' rw3':'')+'" onclick="mOne(\''+bt.id+'\','+i+',\'win\')">✓</button><button class="rb2'+(r==='lose'?' rl':'')+'" onclick="mOne(\''+bt.id+'\','+i+',\'lose\')">✗</button></div></div>';});
+$('ed-quotes').innerHTML=qh;
+$('ed-score').innerHTML=bt.score!==null?'<div class="sc"><div class="sn2">'+bt.score+' pt</div><div class="ss2">Corretti: '+bt.correct+'/'+MX+' | Bonus: +'+bt.bonus+'</div></div>':'';
+show('pg-edet');}
+
+async function mOne(bid,i,v){var r=await sb.from('bets').select('results').eq('id',bid).single();if(!r.data)return;var rs=r.data.results.slice();rs[i]=v;await sb.from('bets').update({results:rs}).eq('id',bid);if(vPl)loadEDet(vPl);}
+async function mAll(bid,v){var r=await sb.from('bets').select('results').eq('id',bid).single();if(!r.data)return;var rs=r.data.results.map(function(x){return x==='pending'?v:x;});await sb.from('bets').update({results:rs}).eq('id',bid);if(vPl)loadEDet(vPl);}
+async function togV(bid){var r=await sb.from('bets').select('verified').eq('id',bid).single();if(!r.data)return;await sb.from('bets').update({verified:!r.data.verified}).eq('id',bid);if(vPl)loadEDet(vPl);}
+
+async function calcScores(){
+  var md=await curMd();if(!md||md.status!=='locked')return flash('La giornata deve essere chiusa','error');
+  var bs2=await bets(md.id);var err=false;bs2.forEach(function(b){(b.results||[]).forEach(function(r){if(r==='pending')err=true;});});
+  if(err)return flash('Segna tutti gli esiti prima!','error');
+  var results=[];
+  for(var i=0;i<bs2.length;i++){var b=bs2[i];var p2=0,cor=0;
+    (b.quotes||[]).forEach(function(q,j){if(b.results[j]==='win'){var qv=parseFloat(q);p2+=(qv<=VTH)?1:qv;cor++;}});
+    var bon=BM[cor]||0;var sc=Math.round((p2+bon)*100)/100;
+    await sb.from('bets').update({score:sc,correct:cor,bonus:bon}).eq('id',b.id);
+    results.push({pid:b.participant_id,score:sc,correct:cor,bonus:bon});}
+  await sb.from('matchdays').update({status:'scored'}).eq('id',md.id);
+  await sb.from('config').update({value:null}).eq('key','current_matchday');
+  // Riepilogo
+  results.sort(function(a,b2){return b2.score-a.score;});
+  var rh='<div class="bd bdr" style="margin-bottom:14px">Giornata '+md.number+'</div><div class="riep">';
+  for(var j=0;j<results.length;j++){var r=results[j];var n=await nm(r.pid);
+    rh+='<div class="riep-row"><span>'+(j===0?'🏆 ':'')+n+'</span><span style="font-weight:700;color:'+(j===0?'var(--gd)':'var(--w)')+'">'+r.score+' pt <span style="font-size:10px;color:var(--t2)">('+r.correct+'/'+MX+' +'+r.bonus+')</span></span></div>';}
+  rh+='</div><button class="btn" style="margin-top:16px" onclick="goTab(\'dash\')">TORNA ALLA DASHBOARD</button>';
+  $('riep-content').innerHTML=rh;show('pg-riep');flash('Punteggi calcolati!','success');
+}
+
+// === GIOCATORI ===
+async function loadPl(){var p=await pts2();var h='';p.forEach(function(x){h+='<div class="pr2"><span style="font-weight:600;color:var(--t0)">'+x.name+'</span><button class="dbb" onclick="delPl(\''+x.id+'\')">✕</button></div>';});if(p.length===0)h='<p class="ey">Nessun giocatore</p>';$('pl-list').innerHTML=h;show('pg-pl');}
+async function addPl(){var n=$('pl-n').value.trim(),p=$('pl-p').value.trim();if(!n||!p)return flash('Nome e PIN richiesti','error');if(p.length<3)return flash('PIN min 3 cifre','error');var r=await sb.from('participants').insert({name:n,pin:p});if(r.error)return flash(r.error.message,'error');var pr=await ppool();await sb.from('prize_pool').update({base:(pr.base||0)+EPRZ}).eq('id',1);$('pl-n').value='';$('pl-p').value='';flash(n+' aggiunto!','success');loadPl();}
+async function delPl(id){if(!confirm('Rimuovere questo giocatore?'))return;await sb.from('participants').delete().eq('id',id);flash('Rimosso','success');loadPl();}
+
+// === MONTEPREMI ===
+async function loadPr(){var p=await ppool();var t=tp(p);$('pr-total').textContent=t.toFixed(2)+' €';
+$('pr-brk').innerHTML='<div class="bx"><div class="brk"><span>Iscrizioni</span><span style="font-weight:600">'+( p.base||0).toFixed(2)+' €</span></div><div class="brk"><span>Giornate</span><span style="font-weight:600">'+(p.matchday||0).toFixed(2)+' €</span></div><div class="brk"><span>Penalità</span><span style="font-weight:600">'+(p.penalties||0).toFixed(2)+' €</span></div><div class="brk"><span>20% vincite</span><span style="font-weight:600">'+(p.winnings||0).toFixed(2)+' €</span></div></div>';
+$('pr-adm').innerHTML='<div class="bx" style="margin-top:12px"><div class="st" style="margin-top:0">AGGIUNGI MANUALE</div><div class="ilf"><input class="ip" style="flex:1" type="number" inputmode="decimal" placeholder="€" id="mp-v"><button class="bs" onclick="addPrz()">+</button></div><div class="st">REGISTRA VINCITA (20%)</div><div class="ilf"><input class="ip" style="flex:1" type="number" inputmode="decimal" placeholder="Vincita €" id="wn-v"><button class="bs" onclick="addWn()">+</button></div></div>';
+var dh='<div class="bx" style="margin-top:12px"><div class="st" style="margin-top:0">DISTRIBUZIONE TOP 5</div>';
+PD.forEach(function(pc,i){dh+='<div class="prw"><span style="font-weight:700;color:var(--gd);width:28px">'+(i+1)+'°</span><span style="color:var(--t1);width:40px">'+(pc*100).toFixed(0)+'%</span><span style="font-weight:600;color:var(--w)">'+(t*pc).toFixed(2)+' €</span></div>';});dh+='</div>';$('pr-dist').innerHTML=dh;
+await loadCls();show('pg-pr');}
+
+async function loadCls(){var pa=await pts2();var mds=await sb.from('matchdays').select('*').eq('status','scored');var sc={};pa.forEach(function(p){sc[p.id]={name:p.name,total:0,played:0,pens:0};});
+if(mds.data){for(var i=0;i<mds.data.length;i++){var md=mds.data[i];var b=await bets(md.id);var sub={};b.forEach(function(x){sub[x.participant_id]=true;});b.forEach(function(x){if(sc[x.participant_id]&&x.score!==null){sc[x.participant_id].total+=x.score;sc[x.participant_id].played++;}});(md.active_participants||[]).forEach(function(pid){if(!sub[pid]&&sc[pid]){sc[pid].total+=PPTS;sc[pid].pens++;}});}}
+var arr=Object.values(sc);arr.sort(function(a,b){return b.total-a.total;});var pc2=['#F5A623','#A0AEC0','#CD7F32'];var h='';
+arr.forEach(function(s,i){var bg=i<3?pc2[i]:'var(--bd)';var co=i<3?'#000':'var(--t1)';
+h+='<div class="sr'+(i===0?' f':'')+'"><div class="pc" style="background:'+bg+';color:'+co+'">'+(i+1)+'</div><div style="flex:1"><div style="font-weight:600;font-size:14px;color:var(--t0)">'+s.name+'</div><div style="font-size:10px;color:var(--t2)">'+s.played+'g'+(s.pens>0?' · '+s.pens+'pen':'')+'</div></div><div style="font-weight:800;color:var(--r);font-size:16px">'+s.total.toFixed(2)+'</div></div>';});
+$('pr-cls').innerHTML=h||'<p class="ey">Nessun dato</p>';}
+
+async function addPrz(){var v=parseFloat($('mp-v').value);if(isNaN(v)||v<=0)return flash('Importo non valido','error');var p=await ppool();await sb.from('prize_pool').update({base:(p.base||0)+v}).eq('id',1);$('mp-v').value='';flash('+'+v+'€','success');loadPr();}
+async function addWn(){var v=parseFloat($('wn-v').value);if(isNaN(v)||v<=0)return flash('Importo non valido','error');var c=Math.round(v*.2*100)/100;var p=await ppool();await sb.from('prize_pool').update({winnings:(p.winnings||0)+c}).eq('id',1);$('wn-v').value='';flash('20% di '+v+' = '+c+'€','success');loadPr();}
+
+// === WHATSAPP ===
+async function waMsg(type){
+  var md=await curMd();var txt='';
+  if(type==='open'){txt='📢 *FANTASCOMMESSE*\n\nGiornata '+(md?md.number:'?')+' APERTA!\n';if(md&&md.deadline)txt+='⏰ Deadline: '+fmtD(md.deadline)+'\n';txt+='\nCarica la tua schedina su:\nhttps://TUO-USERNAME.github.io/fantascommesse/cliente.html';}
+  else if(type==='closed'){txt='🔒 *FANTASCOMMESSE*\n\nGiornata '+(md?md.number:'?')+' CHIUSA!\nChi non ha caricato: -2 punti + 10€ penalità.\n\nRisultati in arrivo...';}
+  else if(type==='scores'){var st=await getStArr();txt='🏆 *FANTASCOMMESSE — Classifica*\n\n';st.slice(0,10).forEach(function(s,i){txt+=(i+1)+'° '+s.name+' — '+s.total.toFixed(2)+' pt\n';});}
+  else if(type==='reminder'){txt='⏰ *FANTASCOMMESSE — Reminder*\n\nGiornata '+(md?md.number:'?');if(md&&md.deadline)txt+=' chiude alle '+fmtD(md.deadline);txt+='!\n\nCarica subito la tua schedina!';}
+  else if(type==='results'){if(md){var bs3=await bets(md.id);bs3.sort(function(a,b){return(b.score||0)-(a.score||0);});txt='📊 *FANTASCOMMESSE — Risultati G'+(md.number)+'*\n\n';for(var i=0;i<bs3.length;i++){var n=await nm(bs3[i].participant_id);txt+=(i+1)+'. '+n+' — '+(bs3[i].score||0)+' pt ('+( bs3[i].correct||0)+'/10)\n';}}}
+  window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(txt));
+}
+async function getStArr(){var pa=await pts2();var mds=await sb.from('matchdays').select('*').eq('status','scored');var sc={};pa.forEach(function(p){sc[p.id]={name:p.name,total:0};});if(mds.data){for(var i=0;i<mds.data.length;i++){var md=mds.data[i];var b=await bets(md.id);b.forEach(function(x){if(sc[x.participant_id]&&x.score!==null)sc[x.participant_id].total+=x.score;});(md.active_participants||[]).forEach(function(pid){var sub2={};b.forEach(function(x2){sub2[x2.participant_id]=true;});if(!sub2[pid]&&sc[pid])sc[pid].total+=PPTS;});}}var arr=Object.values(sc);arr.sort(function(a,b){return b.total-a.total;});return arr;}
+
+// === STORICO ===
+async function loadStorico(){var mds=await sb.from('matchdays').select('*').order('number',{ascending:false});var h='';
+if(mds.data&&mds.data.length>0){for(var i=0;i<mds.data.length;i++){var m=mds.data[i];var b=await bets(m.id);var best=null,bsc=-1;b.forEach(function(x){if(x.score!==null&&x.score>bsc){bsc=x.score;best=x.participant_id;}});var stxt=m.status==='open'?'Aperta':m.status==='locked'?'Chiusa':'Calcolata';var scol=m.status==='open'?'var(--gn)':m.status==='locked'?'var(--gd)':'var(--t2)';
+h+='<div class="hr2"><div><span style="font-weight:600">G'+m.number+'</span><span style="font-size:11px;color:'+scol+';margin-left:8px">'+stxt+'</span>';if(m.deadline)h+='<br><span style="font-size:10px;color:var(--t2)">'+fmtD(m.deadline)+'</span>';h+='</div><span style="color:var(--t1);font-size:12px">'+(best?(await nm(best))+' '+bsc+'pt':b.length+' sch.')+'</span></div>';}}
+else{h='<p class="ey">Nessuna giornata</p>';}$('stor-list').innerHTML=h;show('pg-stor');}
+
+async function resetAll(){if(!confirm('ATTENZIONE: Cancellare TUTTI i dati?'))return;if(!confirm('Sei sicuro? Non si può annullare.'))return;
+await sb.from('bets').delete().neq('id','00000000-0000-0000-0000-000000000000');await sb.from('matchdays').delete().neq('id','00000000-0000-0000-0000-000000000000');await sb.from('participants').delete().neq('id','00000000-0000-0000-0000-000000000000');await sb.from('prize_pool').update({base:0,matchday:0,penalties:0,winnings:0}).eq('id',1);await sb.from('config').update({value:null}).eq('key','current_matchday');flash('Reset completato','success');goTab('dash');}
+
+window.onload=init;
+</script>
+
+</body>
+</html>

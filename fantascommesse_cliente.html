@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>FantaScommesse</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#080E1E;--s1:#0F1729;--s2:#182035;--bd:#1E2A45;--r:#E42528;--r2:#B91C1F;--rg:rgba(228,37,40,.14);--w:#FCFCFD;--t0:#E8ECF4;--t1:#C2CAD8;--t2:#7B869C;--t3:#3D4659;--gd:#F5A623;--gn:#2DD667;--gg:rgba(45,214,103,.1);--rb:rgba(228,37,40,.08)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--w);max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:74px;-webkit-font-smoothing:antialiased}
+.pg{padding:16px 20px 24px;display:none}.pg.on{display:block}
+#toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:11px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:999;display:none;max-width:90%}
+.tok{background:rgba(20,83,45,.95);color:#86efac}.ter{background:rgba(127,29,29,.95);color:#fca5a5}
+.logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--r),var(--r2));display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(228,37,40,.25);margin:0 auto}
+.logo span{font-size:21px;font-weight:800;color:#fff;letter-spacing:-1px}
+.btn{width:100%;padding:13px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--r),var(--r2));color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:active{opacity:.85}
+.bto{width:100%;padding:11px;border:1px dashed var(--bd);border-radius:11px;background:transparent;color:var(--t1);font-size:13px;cursor:pointer;text-align:center}
+.bk{background:none;border:none;color:var(--r);font-size:15px;font-weight:600;cursor:pointer;padding:6px 0 14px}
+.lo{background:none;border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:12px;padding:5px 12px;cursor:pointer}
+.lb{display:block;font-size:11px;font-weight:700;color:var(--t1);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
+.ip{width:100%;padding:11px 13px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;color:var(--w);font-size:16px;outline:none;-webkit-appearance:none;font-family:inherit}
+.ip::placeholder{color:var(--t3)}
+.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-top:8px}
+.hdn{font-size:20px;font-weight:800;color:var(--w)}.hds{font-size:12px;color:var(--t2);margin-top:1px}
+.h2{font-size:20px;font-weight:800;margin-bottom:12px;color:var(--w)}
+.ht{font-size:13px;color:var(--t1);margin-bottom:10px}
+.ey{font-size:14px;color:var(--t2);text-align:center;padding:28px 0}
+.st{font-size:10px;font-weight:700;color:var(--t1);letter-spacing:1.2px;margin:18px 0 8px;text-transform:uppercase}
+
+.mc{border-radius:14px;padding:14px 16px;margin-bottom:14px;text-align:center}
+.mco{background:linear-gradient(135deg,var(–s1),var(–s2));border:1px solid rgba(45,214,103,.2)}
+.mcl{background:var(–s1);border:1px solid rgba(245,166,35,.2)}
+.mcx{background:var(–s1);border:1px solid var(–bd);color:var(–t1);font-size:14px;padding:16px}
+.bd{display:inline-block;font-size:11px;font-weight:700;padding:4px 12px;border-radius:14px;letter-spacing:.3px}
+.bdg{background:var(–gg);color:var(–gn)}.bdy{background:rgba(245,166,35,.12);color:var(–gd)}.bdr{background:var(–rg);color:var(–r)}
+.cdwn{font-size:13px;color:var(–gd);margin-top:5px;font-weight:700}
+.cdwn.urg{color:var(–r);font-size:15px;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+.gd{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cd{background:var(–s1);border:1px solid var(–bd);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;color:var(–w)}.cd:active{background:var(–s2)}.ci{font-size:26px;margin-bottom:6px}.cl{font-size:12px;font-weight:600;color:var(–t1)}
+.rw{width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(–s1);border:1px solid var(–bd);border-radius:11px;margin-bottom:7px;cursor:pointer;color:var(–w);font-size:14px;text-align:left}.rw:active{background:var(–s2)}
+
+.tabs{display:flex;gap:5px;margin-bottom:10px}.tab{flex:1;padding:9px;border:1px solid var(–bd);border-radius:9px;background:var(–s1);color:var(–t2);font-size:12px;font-weight:600;cursor:pointer;text-align:center}.tab.on{border-color:var(–r);background:var(–rg);color:var(–r)}
+.qi{display:flex;align-items:center;gap:8px;margin-bottom:7px}.qii{width:26px;height:26px;border-radius:7px;background:var(–s1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(–t1);border:1px solid var(–bd);flex-shrink:0}.qif{flex:1;padding:10px 11px;background:var(–s1);border:1px solid var(–bd);border-radius:9px;color:var(–w);font-size:16px;outline:none;font-family:inherit}
+.qr{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;margin-bottom:5px;border:1px solid var(–bd)}.qr.w{background:var(–gg);border-color:var(–gn)}.qr.l{background:var(–rb);border-color:var(–r)}
+.qx{width:22px;font-size:11px;font-weight:700;color:var(–t1);text-align:center}.qv{flex:1;font-size:15px;font-weight:600;color:var(–t0)}
+.vt{display:inline-block;margin-left:6px;font-size:8px;font-weight:800;color:var(–gd);background:rgba(245,166,35,.15);padding:2px 5px;border-radius:3px;vertical-align:middle}
+.qrs{font-size:17px;font-weight:700}
+.sc{background:var(–rg);border-radius:12px;padding:14px 16px;text-align:center;margin-top:14px;border:1px solid rgba(228,37,40,.15)}.sn{font-size:26px;font-weight:800;color:var(–r)}.ss{font-size:11px;color:var(–t1);margin-top:3px}
+.sr{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(–s1);border:1px solid var(–bd);border-radius:11px;margin-bottom:7px}.sr.f{border-color:rgba(245,166,35,.3)}.sr.me{border-color:var(–r);background:var(–rg)}
+.pc{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.bx{background:var(–s1);border-radius:14px;padding:14px 16px;border:1px solid var(–bd);margin-top:14px}
+.brk{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(–bg);font-size:13px;color:var(–t0)}
+.prw{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(–bg);font-size:13px}
+.ifull{width:100%;max-height:280px;object-fit:contain;border-radius:10px;margin:10px 0}
+.iprev{width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-top:10px}
+.abx{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(–s1);border-radius:10px;margin:10px 0;border:1px solid var(–bd);font-size:13px;color:var(–t0)}.abx a{color:var(–r);font-weight:600;text-decoration:none}
+.lbx{display:block;padding:10px;background:var(–rg);border-radius:10px;margin:10px 0;border:1px solid rgba(228,37,40,.15);color:var(–r);font-weight:600;font-size:13px;text-decoration:none;text-align:center}
+.hr2{display:flex;justify-content:space-between;padding:9px 12px;background:var(–s1);border:1px solid var(–bd);border-radius:9px;margin-bottom:5px;font-size:13px;color:var(–t0)}
+.nv{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;background:var(–bg);border-top:1px solid var(–bd);z-index:100}
+.nb{flex:1;padding:7px 0 5px;background:none;border:none;color:var(–t3);cursor:pointer;text-align:center;position:relative}.nb.a{color:var(–r)}.nb.a::after{content:’’;position:absolute;top:0;left:30%;right:30%;height:2px;background:var(–r);border-radius:0 0 2px 2px}.ni{font-size:19px}.nl{font-size:9px;font-weight:700;margin-top:1px;letter-spacing:.3px;color:inherit}
+.ld{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:var(–bg)}
+.gc{color:var(–gn);font-weight:600;margin:7px 0 0;font-size:13px}
+.reg-section{margin-bottom:14px}.reg-title{font-size:14px;font-weight:700;color:var(–r);margin-bottom:5px}.reg-text{font-size:13px;color:var(–t0);line-height:1.6}.reg-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;color:var(–t0)}
+/* Riepilogo pre-invio */
+.riep-pre{background:var(–s1);border:1px solid var(–bd);border-radius:12px;padding:14px 16px;margin-top:14px}
+.riep-pre .rp-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;color:var(–t0)}
+.riep-pre .rp-row .rp-v{font-weight:600;color:var(–w)}
+/* Personal stats */
+.ps-card{background:var(–s1);border:1px solid var(–bd);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.ps-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;color:var(–t0)}
+.ps-val{font-weight:700;color:var(–w)}
+</style>
+
+</head>
+<body>
+<div id="toast"></div>
+<div id="pg-ld" class="ld"><div class="logo"><span>FS</span></div><div style="color:var(--t2);margin-top:14px;font-size:13px">Caricamento...</div></div>
+
+<!-- LOGIN -->
+
+<div id="pg-login" class="pg">
+<div style="text-align:center;padding:50px 24px 40px">
+  <div class="logo"><span>FS</span></div>
+  <h1 style="font-size:26px;font-weight:800;margin:18px 0 4px;color:var(--w)">FantaScommesse</h1>
+  <p style="font-size:13px;color:var(--t1);margin-bottom:28px">Serie A — Agenzia Barcellona P.G.</p>
+  <div style="max-width:280px;margin:0 auto;display:flex;flex-direction:column;gap:10px">
+    <input class="ip" type="text" placeholder="Nome utente" id="l-name" autocomplete="off" autocapitalize="words">
+    <input class="ip" type="password" inputmode="numeric" placeholder="PIN" id="l-pin">
+    <button class="btn" onclick="doLogin()">ACCEDI</button>
+  </div>
+</div>
+</div>
+
+<!-- HOME -->
+
+<div id="pg-home" class="pg">
+<div class="hd"><div><div class="hdn" id="h-name"></div><div class="hds">FantaScommesse</div></div><button class="lo" onclick="doLogout()">Esci</button></div>
+<div id="h-md"></div>
+<div id="h-ps"></div>
+<div class="st">ULTIME GIORNATE</div>
+<div id="h-hist"></div>
+</div>
+
+<!-- SCHEDINA FORM -->
+
+<div id="pg-bet" class="pg">
+<button class="bk" onclick="goTab('home')">← Indietro</button>
+<h2 class="h2">Carica Schedina</h2>
+<p class="ht" id="b-hint"></p>
+<div class="lb">ALLEGA RICEVUTA</div>
+<div class="tabs">
+  <button class="tab on" id="at-photo" onclick="setAtt('photo')">📸 Foto</button>
+  <button class="tab" id="at-pdf" onclick="setAtt('pdf')">📄 PDF</button>
+  <button class="tab" id="at-link" onclick="setAtt('link')">🔗 Link</button>
+</div>
+<div id="a-photo"><input type="file" accept="image/*" id="f-photo" onchange="onFPh()" style="display:none"><button class="bto" id="btn-ph" onclick="$('f-photo').click()">SCATTA / CARICA FOTO</button><img id="ph-prev" class="iprev" style="display:none"></div>
+<div id="a-pdf" style="display:none"><input type="file" accept="application/pdf" id="f-pdf" onchange="onFPd()" style="display:none"><button class="bto" id="btn-pd" onclick="$('f-pdf').click()">CARICA PDF</button></div>
+<div id="a-link" style="display:none"><input class="ip" type="url" id="i-link" placeholder="https://www.quigioco.it/..."></div>
+<div style="margin-top:16px"><div class="lb">QUOTE (1-10)</div><div id="q-inputs"></div></div>
+<div id="riep-area"></div>
+<button class="btn" style="margin-top:16px" id="btn-sub" onclick="previewBet()">VERIFICA E INVIA</button>
+</div>
+
+<!-- CONFERMA -->
+
+<div id="pg-conf" class="pg">
+<button class="bk" onclick="show('pg-bet')">← Modifica</button>
+<h2 class="h2">Riepilogo Schedina</h2>
+<div id="conf-quotes"></div>
+<button class="btn" style="margin-top:20px" onclick="submitBet()">CONFERMA E INVIA</button>
+<button class="bto" style="margin-top:8px" onclick="show('pg-bet')">MODIFICA</button>
+</div>
+
+<!-- SCHEDINE LISTA -->
+
+<div id="pg-blist" class="pg"><h2 class="h2">Schedine</h2><div id="bl-list"></div></div>
+<div id="pg-bmd" class="pg"><button class="bk" onclick="show('pg-blist');loadBList()">← Indietro</button><h2 class="h2" id="bm-title"></h2><div id="bm-list"></div></div>
+<div id="pg-bdet" class="pg"><button class="bk" onclick="show('pg-bmd')">← Indietro</button><h2 class="h2" id="bd-name"></h2><div id="bd-badge"></div><div id="bd-att"></div><div id="bd-quotes"></div><div id="bd-score"></div></div>
+
+<!-- CLASSIFICA -->
+
+<div id="pg-cls" class="pg"><h2 class="h2">Classifica Generale</h2><div id="cls-list"></div><div id="cls-dist"></div></div>
+
+<!-- MONTEPREMI -->
+
+<div id="pg-pr" class="pg"><h2 class="h2">Montepremi</h2><div id="pr-total" style="font-size:38px;font-weight:800;color:var(--r);text-align:center;margin:18px 0"></div><div id="pr-brk"></div></div>
+
+<!-- REGOLAMENTO -->
+
+<div id="pg-reg" class="pg">
+<h2 class="h2">Regolamento</h2>
+<div class="reg-section"><div class="reg-title">Il Gioco</div><div class="reg-text">FantaScommesse è un gioco a premi tra i clienti dell'agenzia. Ogni giornata di Serie A, i partecipanti giocano una schedina da 10 scommesse (qualsiasi tipo). L'app traccia quote, esiti e punteggi per una classifica stagionale.</div></div>
+<div class="reg-section"><div class="reg-title">Iscrizione e Costi</div><div class="reg-row"><span>Iscrizione</span><span style="color:var(--w);font-weight:600">7€ (5 monte + 2 gestore)</span></div><div class="reg-row"><span>Schedina</span><span style="color:var(--w);font-weight:600">10€/giornata</span></div><div class="reg-row"><span>Scommesse</span><span style="color:var(--w);font-weight:600">10 per giornata</span></div><div class="reg-row"><span>Premio giornata</span><span style="color:var(--w);font-weight:600">25€ fissi</span></div></div>
+<div class="reg-section"><div class="reg-title">Punteggio</div><div class="reg-text">Corretto = punti pari alla quota. Errato = 0 punti. Quota ≤ 1.15 = VOID (1 punto fisso).</div><div class="reg-row" style="margin-top:5px"><span>7 corretti</span><span style="color:var(--gn);font-weight:700">+1</span></div><div class="reg-row"><span>8 corretti</span><span style="color:var(--gn);font-weight:700">+2</span></div><div class="reg-row"><span>9 corretti</span><span style="color:var(--gn);font-weight:700">+3</span></div><div class="reg-row"><span>10 corretti</span><span style="color:var(--gn);font-weight:700">+5</span></div></div>
+<div class="reg-section"><div class="reg-title">Penalità</div><div class="reg-text">Mancato caricamento: -2 punti + 10€ al montepremi.</div></div>
+<div class="reg-section"><div class="reg-title">Montepremi (Top 5)</div><div class="reg-row"><span>1°</span><span style="color:var(--gd);font-weight:700">43%</span></div><div class="reg-row"><span>2°</span><span style="color:var(--gd);font-weight:700">26%</span></div><div class="reg-row"><span>3°</span><span style="color:var(--gd);font-weight:700">15%</span></div><div class="reg-row"><span>4°</span><span style="color:var(--gd);font-weight:700">10%</span></div><div class="reg-row"><span>5°</span><span style="color:var(--gd);font-weight:700">6%</span></div></div>
+</div>
+
+<!-- NAV -->
+
+<div class="nv" id="nav" style="display:none">
+<button class="nb a" id="n-home" onclick="goTab('home')"><div class="ni">🏠</div><div class="nl">Home</div></button>
+<button class="nb" id="n-sch" onclick="goTab('sch')"><div class="ni">📋</div><div class="nl">Schedine</div></button>
+<button class="nb" id="n-cls" onclick="goTab('cls')"><div class="ni">🏆</div><div class="nl">Classifica</div></button>
+<button class="nb" id="n-pr" onclick="goTab('pr')"><div class="ni">💰</div><div class="nl">Montepremi</div></button>
+<button class="nb" id="n-reg" onclick="goTab('reg')"><div class="ni">📖</div><div class="nl">Regole</div></button>
+</div>
+
+<script>
+var SURL='https://TUO-PROGETTO.supabase.co';
+var SKEY='TUA-ANON-KEY';
+
+var VTH=1.15,MX=10,BM={7:1,8:2,9:3,10:5},PD=[.43,.26,.15,.10,.06],PPTS=-2;
+var sb,usr=null,attT='photo',phFile=null,pdFile=null,vMdId=null,cdT=null,parsedQ=[];
+
+function init(){sb=window.supabase.createClient(SURL,SKEY);buildQI();
+  var s=sessionStorage.getItem('fs_usr');if(s){try{usr=JSON.parse(s);$('pg-ld').style.display='none';$('nav').style.display='flex';goTab('home');return;}catch(e){}}
+  $('pg-ld').style.display='none';show('pg-login');}
+function $(id){return document.getElementById(id);}
+function show(id){var pp=document.querySelectorAll('.pg');for(var i=0;i<pp.length;i++)pp[i].classList.remove('on');$(id).classList.add('on');}
+function flash(m,t){var e=$('toast');e.textContent=m;e.className=t==='error'?'ter':'tok';e.style.display='block';setTimeout(function(){e.style.display='none';},2500);}
+function setNav(t){var m={home:'n-home',sch:'n-sch',cls:'n-cls',pr:'n-pr',reg:'n-reg'};Object.keys(m).forEach(function(k){$(m[k]).className=k===t?'nb a':'nb';});}
+function goTab(t){setNav(t);if(cdT)clearInterval(cdT);
+if(t==='home')loadHome();else if(t==='sch')checkSch();else if(t==='cls')loadCls();else if(t==='pr')loadPr();else if(t==='reg')show('pg-reg');}
+function buildQI(){var h='';for(var i=0;i<MX;i++)h+='<div class="qi"><span class="qii">'+(i+1)+'</span><input class="qif" type="text" inputmode="decimal" placeholder="Quota" id="q-'+i+'"></div>';$('q-inputs').innerHTML=h;}
+
+async function curMd(){var c=await sb.from('config').select('value').eq('key','current_matchday').single();if(!c.data||!c.data.value||c.data.value==='null')return null;var m=await sb.from('matchdays').select('*').eq('id',c.data.value).single();return m.data||null;}
+async function getBets(mid){return(await sb.from('bets').select('*').eq('matchday_id',mid)).data||[];}
+async function getPP(){return(await sb.from('prize_pool').select('*').eq('id',1).single()).data||{base:0,matchday:0,penalties:0,winnings:0};}
+function tpz(p){return(p.base||0)+(p.matchday||0)+(p.penalties||0)+(p.winnings||0);}
+async function nm(id){var r=await sb.from('participants').select('name').eq('id',id).single();return r.data?r.data.name:'?';}
+function fmtD(dl){if(!dl)return'—';var d=new Date(dl);return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
+function fmtCD(dl){var d=new Date(dl).getTime()-Date.now();if(d<=0)return'Scaduta';var h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);if(h>24)return Math.floor(h/24)+'g '+h%24+'h';return h+'h '+m+'m '+s+'s';}
+function isOpen(md){return md&&md.status==='open'&&(!md.deadline||new Date(md.deadline).getTime()>Date.now());}
+
+// === LOGIN ===
+async function doLogin(){var name=$('l-name').value.trim(),pin=$('l-pin').value.trim();
+if(!name||!pin)return flash('Inserisci nome e PIN','error');
+var r=await sb.from('participants').select('*').ilike('name',name).eq('pin',pin).single();
+if(r.error||!r.data)return flash('Nome o PIN errato','error');
+usr=r.data;sessionStorage.setItem('fs_usr',JSON.stringify(usr));$('l-name').value='';$('l-pin').value='';$('nav').style.display='flex';goTab('home');}
+function doLogout(){usr=null;sessionStorage.removeItem('fs_usr');$('nav').style.display='none';if(cdT)clearInterval(cdT);show('pg-login');}
+
+// === HOME ===
+async function loadHome(){$('h-name').textContent='Ciao, '+usr.name;var md=await curMd();if(cdT)clearInterval(cdT);
+var mh='';
+if(md&&isOpen(md)){var bs=await getBets(md.id);var has=bs.some(function(b){return b.participant_id===usr.id;});
+  mh='<div class="mc mco"><div class="bd bdg">G'+md.number+' — APERTA</div>';
+  if(md.deadline){var rem=new Date(md.deadline).getTime()-Date.now();var urg=rem<1800000;
+    mh+='<div class="cdwn'+(urg?' urg':'')+'" id="cd-t">'+fmtCD(md.deadline)+'</div>';
+    cdT=setInterval(function(){var el=$('cd-t');if(el){var r2=new Date(md.deadline).getTime()-Date.now();el.textContent=fmtCD(md.deadline);el.className=r2<1800000?'cdwn urg':'cdwn';}},1000);}
+  if(has)mh+='<p class="gc">✓ Schedina caricata</p>';
+  else mh+='<button class="btn" style="margin-top:10px" onclick="goTab(\'sch\')">CARICA SCHEDINA</button>';
+  mh+='</div>';
+}else if(md&&(md.status==='locked'||(md.status==='open'&&md.deadline&&new Date(md.deadline).getTime()<=Date.now()))){
+  mh='<div class="mc mcl"><div class="bd bdy">G'+md.number+' — CHIUSA</div><p style="color:var(--t1);font-size:12px;margin-top:5px">In attesa dei risultati</p></div>';
+}else{mh='<div class="mc mcx">Nessuna giornata attiva</div>';}
+$('h-md').innerHTML=mh;
+
+// Personal stats
+var mds=await sb.from('matchdays').select('*').eq('status','scored');var myTotal=0,myPlayed=0,myPens=0;
+if(mds.data){for(var i=0;i<mds.data.length;i++){var md2=mds.data[i];var b2=await getBets(md2.id);var myBet=null;b2.forEach(function(b){if(b.participant_id===usr.id)myBet=b;});
+if(myBet&&myBet.score!==null){myTotal+=myBet.score;myPlayed++;}else if(md2.active_participants&&md2.active_participants.indexOf(usr.id)!==-1){var sub={};b2.forEach(function(b){sub[b.participant_id]=true;});if(!sub[usr.id]){myTotal+=PPTS;myPens++;}}}}
+$('h-ps').innerHTML='<div class="ps-card"><div class="ps-row"><span>Punteggio totale</span><span class="ps-val" style="color:var(--r)">'+myTotal.toFixed(2)+'</span></div><div class="ps-row"><span>Giornate giocate</span><span class="ps-val">'+myPlayed+'</span></div>'+(myPens>0?'<div class="ps-row"><span>Penalità</span><span class="ps-val" style="color:var(--r)">'+myPens+'</span></div>':'')+'</div>';
+
+// History
+var mds2=await sb.from('matchdays').select('*').order('number',{ascending:false}).limit(3);var hh='';
+if(mds2.data&&mds2.data.length>0){for(var j=0;j<mds2.data.length;j++){var m=mds2.data[j];var b3=await getBets(m.id);
+  var myB=null;b3.forEach(function(b){if(b.participant_id===usr.id)myB=b;});
+  var info=m.status==='scored'?(myB&&myB.score!==null?'Tu: '+myB.score+' pt':'Non caricata'):m.status==='open'?'Aperta':'Chiusa';
+  hh+='<div class="hr2"><span style="font-weight:600">G'+m.number+'</span><span style="color:var(--t1)">'+info+'</span></div>';}}
+else{hh='<p class="ey">Nessuna giornata</p>';}
+$('h-hist').innerHTML=hh;show('pg-home');}
+
+// === SCHEDINA ===
+async function checkSch(){var md=await curMd();
+if(md&&isOpen(md)){var bs=await getBets(md.id);if(!bs.some(function(b){return b.participant_id===usr.id;})){$('b-hint').textContent='Giornata '+md.number+(md.deadline?' — Deadline: '+fmtD(md.deadline):'');resetForm();show('pg-bet');return;}}
+loadBList();show('pg-blist');}
+function resetForm(){for(var i=0;i<MX;i++){var e=$('q-'+i);if(e)e.value='';}phFile=null;pdFile=null;if($('i-link'))$('i-link').value='';$('ph-prev').style.display='none';$('btn-ph').textContent='SCATTA / CARICA FOTO';$('btn-pd').textContent='CARICA PDF';setAtt('photo');$('riep-area').innerHTML='';}
+function setAtt(t){attT=t;$('at-photo').className=t==='photo'?'tab on':'tab';$('at-pdf').className=t==='pdf'?'tab on':'tab';$('at-link').className=t==='link'?'tab on':'tab';$('a-photo').style.display=t==='photo'?'block':'none';$('a-pdf').style.display=t==='pdf'?'block':'none';$('a-link').style.display=t==='link'?'block':'none';}
+function onFPh(){var f=$('f-photo').files[0];if(!f)return;phFile=f;$('btn-ph').textContent='✓ FOTO CARICATA';var r=new FileReader();r.onload=function(e){$('ph-prev').src=e.target.result;$('ph-prev').style.display='block';};r.readAsDataURL(f);}
+function onFPd(){var f=$('f-pdf').files[0];if(!f)return;pdFile=f;$('btn-pd').textContent='✓ '+f.name;}
+
+function previewBet(){
+  parsedQ=[];var ok=true;
+  for(var i=0;i<MX;i++){var v=parseFloat($('q-'+i).value.replace(',','.'));if(isNaN(v)||v<=0){ok=false;break;}parsedQ.push(v);}
+  if(!ok||parsedQ.length!==MX)return flash('Inserisci 10 quote valide','error');
+  // Show confirmation
+  var h='<div class="st" style="margin-top:0">RIEPILOGO</div><div class="riep-pre">';
+  parsedQ.forEach(function(q,i){var vd=q<=VTH?'<span class="vt">VOID</span>':'';
+    h+='<div class="rp-row"><span>'+(i+1)+'. Quota '+q.toFixed(2)+vd+'</span><span class="rp-v">'+(q<=VTH?'1.00':q.toFixed(2))+' pt max</span></div>';});
+  h+='</div>';
+  var confH='';parsedQ.forEach(function(q,i){var vd=q<=VTH?'<span class="vt">VOID</span>':'';
+    confH+='<div class="qr"><span class="qx">'+(i+1)+'</span><span class="qv">'+q.toFixed(2)+vd+'</span></div>';});
+  $('conf-quotes').innerHTML=confH;
+  show('pg-conf');
+}
+
+async function submitBet(){
+  var md=await curMd();if(!md||!isOpen(md))return flash('Giornata chiusa o deadline scaduta','error');
+  var bs=await getBets(md.id);if(bs.some(function(b){return b.participant_id===usr.id;}))return flash('Già caricata','error');
+  var au=null,at=null;
+  if(attT==='photo'&&phFile){at='photo';var p='g'+md.number+'/'+usr.id+'_'+Date.now()+'.jpg';var up=await sb.storage.from('ricevute').upload(p,phFile);if(!up.error)au=sb.storage.from('ricevute').getPublicUrl(p).data.publicUrl;}
+  else if(attT==='pdf'&&pdFile){at='pdf';var p2='g'+md.number+'/'+usr.id+'_'+Date.now()+'.pdf';var up2=await sb.storage.from('ricevute').upload(p2,pdFile);if(!up2.error)au=sb.storage.from('ricevute').getPublicUrl(p2).data.publicUrl;}
+  else if(attT==='link'){var lnk=$('i-link').value.trim();if(lnk){at='link';au=lnk;}}
+  var r=await sb.from('bets').insert({matchday_id:md.id,participant_id:usr.id,quotes:parsedQ,attachment_type:at,attachment_url:au});
+  if(r.error)return flash('Errore: '+r.error.message,'error');
+  flash('Schedina caricata!','success');goTab('home');}
+
+// === LISTA SCHEDINE ===
+async function loadBList(){var mds=await sb.from('matchdays').select('*').order('number',{ascending:false});var h='';
+if(mds.data&&mds.data.length>0){for(var i=0;i<mds.data.length;i++){var m=mds.data[i];var b=await getBets(m.id);
+  var st=m.status==='open'?'Aperta':m.status==='locked'?'Chiusa':'Calcolata';var sc=m.status==='open'?'var(--gn)':m.status==='locked'?'var(--gd)':'var(--t1)';
+  h+='<div class="rw" onclick="loadBMd(\''+m.id+'\','+m.number+')"><span style="font-weight:600">Giornata '+m.number+'</span><span style="font-size:11px;font-weight:600;color:'+sc+'">'+st+' · '+b.length+'</span></div>';}}
+else{h='<p class="ey">Nessuna giornata</p>';}$('bl-list').innerHTML=h;show('pg-blist');}
+
+async function loadBMd(mid,num){vMdId=mid;$('bm-title').textContent='Giornata '+num;var bs=await getBets(mid);var h='';
+if(bs.length===0)h='<p class="ey">Nessuna schedina</p>';
+else{for(var i=0;i<bs.length;i++){var b=bs[i];var n=await nm(b.participant_id);var isMe=b.participant_id===usr.id;
+  var ver=b.verified?'<span style="color:var(--gn)"> ✓</span>':'';var sc=b.score!==null?'<span style="color:var(--r)">'+b.score+' pt</span>':'<span style="color:var(--t2)">—</span>';
+  h+='<div class="rw" style="'+(isMe?'border-color:var(--r);background:var(--rg)':'')+'" onclick="loadBDet(\''+b.id+'\')"><span style="font-weight:600">'+n+(isMe?' (tu)':'')+ver+'</span>'+sc+'</div>';}}
+$('bm-list').innerHTML=h;show('pg-bmd');}
+
+async function loadBDet(bid){var r=await sb.from('bets').select('*').eq('id',bid).single();if(!r.data)return;var b=r.data;
+var n=await nm(b.participant_id);var md=await sb.from('matchdays').select('number').eq('id',b.matchday_id).single();
+$('bd-name').textContent=n;$('bd-badge').innerHTML='<div class="bd bdr">Giornata '+(md.data?md.data.number:'?')+'</div>';
+var ah='';
+if(b.attachment_type==='photo'&&b.attachment_url)ah='<img src="'+b.attachment_url+'" class="ifull">';
+else if(b.attachment_type==='pdf'&&b.attachment_url)ah='<div class="abx"><span>📄 Ricevuta</span><a href="'+b.attachment_url+'" target="_blank">Apri</a></div>';
+else if(b.attachment_type==='link'&&b.attachment_url)ah='<a href="'+b.attachment_url+'" target="_blank" class="lbx">🔗 Apri ricevuta</a>';
+$('bd-att').innerHTML=ah;
+var qh='';(b.quotes||[]).forEach(function(q,i){var rs=(b.results||[])[i]||'pending';var c=rs==='win'?' w':rs==='lose'?' l':'';
+  var vd=parseFloat(q)<=VTH?'<span class="vt">VOID</span>':'';var rc=rs==='win'?'color:var(--gn)':rs==='lose'?'color:var(--r)':'color:var(--t2)';var rt=rs==='win'?'✓':rs==='lose'?'✗':'—';
+  qh+='<div class="qr'+c+'"><span class="qx">'+(i+1)+'</span><span class="qv">'+q+vd+'</span><span class="qrs" style="'+rc+'">'+rt+'</span></div>';});
+$('bd-quotes').innerHTML=qh;
+$('bd-score').innerHTML=b.score!==null?'<div class="sc"><div class="sn">'+b.score+' pt</div><div class="ss">Corretti: '+b.correct+'/'+MX+' | Bonus: +'+b.bonus+'</div></div>':'';
+show('pg-bdet');}
+
+// === CLASSIFICA ===
+async function loadCls(){var pa=(await sb.from('participants').select('*').order('name')).data||[];var mds=await sb.from('matchdays').select('*').eq('status','scored');
+var sc={};pa.forEach(function(p){sc[p.id]={name:p.name,total:0,played:0,pens:0};});
+if(mds.data){for(var i=0;i<mds.data.length;i++){var md=mds.data[i];var bs=await getBets(md.id);var sub={};bs.forEach(function(b){sub[b.participant_id]=true;});
+bs.forEach(function(b){if(sc[b.participant_id]&&b.score!==null){sc[b.participant_id].total+=b.score;sc[b.participant_id].played++;}});
+(md.active_participants||[]).forEach(function(pid){if(!sub[pid]&&sc[pid]){sc[pid].total+=PPTS;sc[pid].pens++;}});}}
+var arr=Object.values(sc);arr.sort(function(a,b){return b.total-a.total;});var pc2=['#F5A623','#A0AEC0','#CD7F32'];var h='';
+arr.forEach(function(s,i){var t3=i<3;var bg=t3?pc2[i]:'var(--bd)';var co=t3?'#000':'var(--t1)';var isMe=false;pa.forEach(function(p){if(p.id===usr.id&&p.name===s.name)isMe=true;});
+h+='<div class="sr'+(i===0?' f':'')+(isMe?' me':'')+'"><div class="pc" style="background:'+bg+';color:'+co+'">'+(i+1)+'</div><div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--t0)">'+s.name+(isMe?' (tu)':'')+'</div><div style="font-size:10px;color:var(--t2)">'+s.played+'g'+(s.pens>0?' · '+s.pens+'pen':'')+'</div></div><div style="font-weight:800;color:var(--r);font-size:16px">'+s.total.toFixed(2)+'</div></div>';});
+if(arr.length===0)h='<p class="ey">Nessun dato</p>';$('cls-list').innerHTML=h;
+var prz=await getPP();var tp2=tpz(prz);
+var dh='<div class="bx"><div style="font-size:10px;font-weight:700;color:var(--t1);letter-spacing:1px;margin-bottom:8px">DISTRIBUZIONE PREMI</div><div style="font-size:15px;font-weight:700;color:var(--r);margin-bottom:10px">Montepremi: '+tp2.toFixed(2)+' €</div>';
+PD.forEach(function(p,i){dh+='<div class="prw"><span style="font-weight:700;color:var(--gd);width:28px">'+(i+1)+'°</span><span style="color:var(--t1);width:40px">'+(p*100).toFixed(0)+'%</span><span style="font-weight:600;color:var(--w)">'+(tp2*p).toFixed(2)+' €</span></div>';});
+dh+='</div>';$('cls-dist').innerHTML=dh;show('pg-cls');}
+
+// === MONTEPREMI ===
+async function loadPr(){var p=await getPP();var t=tpz(p);$('pr-total').textContent=t.toFixed(2)+' €';
+$('pr-brk').innerHTML='<div class="bx"><div class="brk"><span>Iscrizioni</span><span style="font-weight:600">'+( p.base||0).toFixed(2)+' €</span></div><div class="brk"><span>Giornate</span><span style="font-weight:600">'+(p.matchday||0).toFixed(2)+' €</span></div><div class="brk"><span>Penalità</span><span style="font-weight:600">'+(p.penalties||0).toFixed(2)+' €</span></div><div class="brk"><span>20% vincite</span><span style="font-weight:600">'+(p.winnings||0).toFixed(2)+' €</span></div></div>';
+show('pg-pr');}
+
+window.onload=init;
+</script>
+
+</body>
+</html>
